@@ -229,4 +229,8 @@
   .filters-container {
     grid-template-columns: 1fr;
   }
+
+  .ingredient-form {
+    flex-direction: column;
+  }
 }
