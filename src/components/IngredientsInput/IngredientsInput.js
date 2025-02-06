@@ -12,9 +12,8 @@ const IngredientInput = () => {
   const [diet, setDiet] = useState("ninguna"); 
   const [portions, setPortions] = useState(2);
   const [showApplianceModal, setShowApplianceModal] = useState(false);
-  const [selectedAppliances, setSelectedAppliances] = useState([
-    "sartén", "horno", "microondas",
-  ]); 
+  const [selectedAppliances, setSelectedAppliances] = useState(["sartén", "horno", "microondas"]); 
+  const [loading, setLoading] = useState(false); // Estado de carga
 
   const appliancesList = [
     "sartén", "horno", "microondas", "olla a presión", "barbacoa",
@@ -31,7 +30,9 @@ const IngredientInput = () => {
   };
 
   const fetchRecipe = async () => {
-    setErrorMessage(""); 
+    setErrorMessage("");
+    setLoading(true); // Activar estado de carga
+
     try {
       const response = await fetch("/api/recipes", {
         method: "POST",
@@ -57,11 +58,22 @@ const IngredientInput = () => {
     } catch (error) {
       console.error("Error en la búsqueda:", error);
       setErrorMessage("Hubo un problema al generar la receta. Inténtalo de nuevo.");
+    } finally {
+      setLoading(false); // Desactivar estado de carga
     }
   };
 
   return (
     <div className="ingredient-input">
+      {/* Mostrar pantalla de carga mientras se genera la receta */}
+      {loading && (
+        <div className="loading-overlay">
+          <div className="loading-box">
+            <p>🔄 Generando receta...</p>
+          </div>
+        </div>
+      )}
+
       {/* Selectores de filtros */}
       <div className="filters-container">
         <div>
@@ -107,21 +119,20 @@ const IngredientInput = () => {
             className="portions-input"
           />
         </div>
+
         {/* Botón para seleccionar electrodomésticos */}
         <button className="appliance-button" onClick={() => setShowApplianceModal(true)}>
           Electrodomésticos
         </button>
       </div>
 
-     <div className="ingredients-container">
-      <h3>Ingredientes:</h3>
-         {/* Formulario para añadir ingredientes */}
+      <div className="ingredients-container">
+        <h3>Ingredientes:</h3>
         <form onSubmit={handleAddIngredient} className="ingredient-form">
           <input type="text" placeholder="Ej: Pollo, arroz, limón..." className="ingredient-field" />
           <button type="submit" className="ingredient-button">Añadir</button>
         </form>
 
-        {/* Lista de ingredientes */}
         {ingredients.length > 0 && (
           <div className="ingredient-list-container">
             <ul className="ingredient-list">
@@ -132,34 +143,12 @@ const IngredientInput = () => {
             <button onClick={() => setIngredients([])} className="ingredient-button-clear">X</button>
           </div>
         )}
-     </div>
+      </div>
 
-      {/* Modal de electrodomésticos */}
-      {showApplianceModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h2>Selecciona los electrodomésticos disponibles:</h2>
-            {appliancesList.map((appliance) => (
-              <label key={appliance}>
-                <input
-                  type="checkbox"
-                  checked={selectedAppliances.includes(appliance)}
-                  onChange={() => setSelectedAppliances((prev) =>
-                    prev.includes(appliance)
-                      ? prev.filter((a) => a !== appliance)
-                      : [...prev, appliance]
-                  )}
-                />
-                {appliance}
-              </label>
-            ))}
-            <button onClick={() => setShowApplianceModal(false)}>Cerrar</button>
-          </div>
-        </div>
-      )}
-
-      {/* Botón para generar receta */}
-      <button onClick={fetchRecipe} className="generate-button">Generar Receta</button>
+      {/* Botón para generar receta (deshabilitado si está cargando) */}
+      <button onClick={fetchRecipe} className="generate-button" disabled={loading}>
+        {loading ? "Generando..." : "Generar Receta"}
+      </button>
 
       {recipe && (
         <div className="recipe-result">
@@ -171,14 +160,12 @@ const IngredientInput = () => {
             ))}
           </ul>
           <h3>Pasos:</h3>
-          <li>
+          <ul>
             {recipe.steps.map((step, i) => (
               <li key={i}>{step}</li>
             ))}
-          </li>
+          </ul>
           {recipe.tips && <p className="recipe-tips">💡 {recipe.tips}</p>}
-
-          {/* Botón para generar otra receta completamente nueva */}
           <button onClick={fetchRecipe} className="new-recipe-button">🔄 Generar Otra Receta</button>
         </div>
       )}
