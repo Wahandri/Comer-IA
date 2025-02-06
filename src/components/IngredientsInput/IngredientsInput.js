@@ -171,11 +171,11 @@ const IngredientInput = () => {
             ))}
           </ul>
           <h3>Pasos:</h3>
-          <ol>
+          <li>
             {recipe.steps.map((step, i) => (
               <li key={i}>{step}</li>
             ))}
-          </ol>
+          </li>
           {recipe.tips && <p className="recipe-tips">💡 {recipe.tips}</p>}
 
           {/* Botón para generar otra receta completamente nueva */}
