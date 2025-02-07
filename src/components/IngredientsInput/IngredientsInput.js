@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./IngredientsInput.css";
 import "./AIResponse.css";
+// import logo2 from "../../images/logo2.jpg";
 
 const IngredientInput = () => {
   const [ingredients, setIngredients] = useState([]);
@@ -11,11 +12,31 @@ const IngredientInput = () => {
   const [mealType, setMealType] = useState("comida"); 
   const [diet, setDiet] = useState("ninguna"); 
   const [portions, setPortions] = useState(2);
-  const [showLoader, setShowLoader] = useState(false);
-  const [showApplianceModal, setShowApplianceModal] = useState(false);
+  const [showLoader, setShowLoader] = useState(false); // ✅ Se vuelve a usar
+  const [showApplianceModal, setShowApplianceModal] = useState(false); // ✅ Se mantiene
   const [selectedAppliances, setSelectedAppliances] = useState([
     "sartén", "horno", "microondas",
-  ]); 
+  ]);
+
+  // Estados para el modal de advertencia
+  const [showWarning, setShowWarning] = useState(false);
+  const [warningMessage, setWarningMessage] = useState("");
+
+  useEffect(() => {
+    setShowWarning(true);
+    setWarningMessage(
+      `⚠️ <strong>Aviso importante:</strong><br/><br/>
+      Las recetas generadas en esta plataforma son creadas por una inteligencia artificial (IA) utilizando el modelo de OpenAI. 
+      Aunque intentamos proporcionar recetas útiles y precisas, los resultados pueden contener errores, omisiones o ingredientes inadecuados.<br/><br/>
+      <strong>Por favor, usa tu criterio antes de preparar cualquier receta:</strong><br/>
+      - Verifica los ingredientes y pasos antes de cocinar.<br/>
+      - Asegúrate de que los alimentos sean seguros y adecuados para tu dieta.<br/>
+      - Consulta con un profesional si tienes restricciones alimenticias o alergias.<br/><br/>
+      ❗ <strong>No nos hacemos responsables por errores, daños o problemas derivados del uso de estas recetas.</strong><br/><br/>
+      ¡Disfruta cocinando con Comer-IA! 🍽️🤖`
+    );
+    
+  }, []);    
 
   const appliancesList = [
     "sartén", "horno", "microondas", "olla a presión", "barbacoa",
@@ -33,9 +54,11 @@ const IngredientInput = () => {
 
   const fetchRecipe = async () => {
     setErrorMessage(""); 
-    try {
-      setShowLoader(true);
+    setRecipe(null); 
+    setShowWarning(false); 
+    setShowLoader(true);
 
+    try {
       const response = await fetch("/api/recipes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -49,19 +72,29 @@ const IngredientInput = () => {
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
+        setShowWarning(true);
+        setWarningMessage(data.warningmessage || "Error al generar la receta");
         throw new Error(`Error ${response.status}: ${await response.text()}`);
       }
 
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
+      if (data.ok === false) {
+        setShowWarning(true);
+        setWarningMessage(data.warningmessage || "¡Receta no segura!");
+        return;
+      }
 
+      if (data.error) throw new Error(data.error);
+      
       setRecipe(data);
     } catch (error) {
       console.error("Error en la búsqueda:", error);
       setErrorMessage("Hubo un problema al generar la receta. Inténtalo de nuevo.");
+    } finally {
+      setShowLoader(false); // ✅ Desactiva el modal de carga cuando la petición finaliza
     }
-    setShowLoader(false);
   };
 
   return (
@@ -81,7 +114,7 @@ const IngredientInput = () => {
           <label className="meal-label">Tipo de comida:</label>
           <select className="meal-select" value={mealType} onChange={(e) => setMealType(e.target.value)}>
             <option value="desayuno">Desayuno</option>
-            <option value="comida">Comida</option>
+            <option value="almuerzo">Almuerzo</option>
             <option value="cena">Cena</option>
             <option value="postre">Postre</option>
           </select>
@@ -111,21 +144,19 @@ const IngredientInput = () => {
             className="portions-input"
           />
         </div>
-        {/* Botón para seleccionar electrodomésticos */}
+
         <button className="appliance-button" onClick={() => setShowApplianceModal(true)}>
           Electrodomésticos
         </button>
       </div>
 
-     <div className="ingredients-container">
-      <h3>Ingredientes:</h3>
-         {/* Formulario para añadir ingredientes */}
+      <div className="ingredients-container">
+        <h3>Ingredientes:</h3>
         <form onSubmit={handleAddIngredient} className="ingredient-form">
           <input type="text" placeholder="Ej: Pollo, arroz, limón..." className="ingredient-field" />
           <button type="submit" className="ingredient-button">Añadir</button>
         </form>
 
-        {/* Lista de ingredientes */}
         {ingredients.length > 0 && (
           <div className="ingredient-list-container">
             <ul className="ingredient-list">
@@ -136,7 +167,35 @@ const IngredientInput = () => {
             <button onClick={() => setIngredients([])} className="ingredient-button-clear">X</button>
           </div>
         )}
-     </div>
+      </div>
+
+      <button onClick={fetchRecipe} className="generate-button">Generar Receta</button>
+
+      {/* Modal de Carga (Loader) ✅ */}
+      {showLoader && 
+      <div className="loader modal-overlay">
+        <div className="loading-text">
+          Generando Receta<span className="dot">.</span><span className="dot">.</span
+          ><span className="dot">.</span>
+        </div>
+        <div className="loading-bar-background">
+          <div className="loading-bar">
+            <div className="white-bars-container">
+              <div className="white-bar"></div>
+              <div className="white-bar"></div>
+              <div className="white-bar"></div>
+              <div className="white-bar"></div>
+              <div className="white-bar"></div>
+              <div className="white-bar"></div>
+              <div className="white-bar"></div>
+              <div className="white-bar"></div>
+              <div className="white-bar"></div>
+              <div className="white-bar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
 
       {/* Modal de electrodomésticos */}
       {showApplianceModal && (
@@ -162,34 +221,23 @@ const IngredientInput = () => {
         </div>
       )}
 
-      {showLoader && 
-      <div class="loader modal-overlay">
-        <div class="loading-text">
-          Generando Receta<span class="dot">.</span><span class="dot">.</span
-          ><span class="dot">.</span>
-        </div>
-        <div class="loading-bar-background">
-          <div class="loading-bar">
-            <div class="white-bars-container">
-              <div class="white-bar"></div>
-              <div class="white-bar"></div>
-              <div class="white-bar"></div>
-              <div class="white-bar"></div>
-              <div class="white-bar"></div>
-              <div class="white-bar"></div>
-              <div class="white-bar"></div>
-              <div class="white-bar"></div>
-              <div class="white-bar"></div>
-              <div class="white-bar"></div>
+      {/* Modal de Advertencia */}
+      {showWarning && (
+        <div className="modal-overlay">
+          <div className="warning-modal">
+            <img width="130px" src="/logoAlert.png" alt="Comer-IA" className="warning-logo" />
+            <h2>¡¡Precaución!!</h2>
+            <div className="warning-content">
+            <p dangerouslySetInnerHTML={{ __html: warningMessage }} />
+              <button onClick={() => setShowWarning(false)} className="warning-close-button">
+                Entendido
+              </button>
             </div>
           </div>
         </div>
-      </div>
-      
-      }
-      {/* Botón para generar receta */}
-      <button onClick={fetchRecipe} className="generate-button">Generar Receta</button>
+      )}
 
+      {/* Receta */}
       {recipe && (
         <div className="recipe-result">
           <h2>{recipe.title}</h2>
@@ -211,6 +259,7 @@ const IngredientInput = () => {
           <button onClick={fetchRecipe} className="new-recipe-button">🔄 Generar Otra Receta</button>
         </div>
       )}
+
     </div>
   );
 };

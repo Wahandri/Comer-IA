@@ -46,3 +46,41 @@
     border-left: 4px solid #4299e1;
     color: #2b6cb0;
   }
+
+
+  /* Warning Modal */
+.warning-modal {
+  background: #fff3cd;
+  border: 2px solid #ffecb5;
+  border-radius: 10px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+}
+
+.warning-modal h2 {
+  color: #856404;
+  margin-bottom: 1rem;
+}
+
+.warning-content p {
+  color: #856404;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.warning-close-button {
+  background: #ffc107;
+  color: #856404;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+.warning-close-button:hover {
+  background: #ffca28;
+}

@@ -1,4 +1,5 @@
 import IngredientInput from '../components/IngredientsInput/IngredientsInput';
+import Footer from '../components/Footer/Footer';
 
 
 export default function Home() {
@@ -11,6 +12,7 @@ export default function Home() {
       <div className='box-Ingrdients'>
         <IngredientInput />
       </div>
+    <Footer />
     </main>
   );
 }
