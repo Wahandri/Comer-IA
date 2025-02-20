@@ -52,42 +52,54 @@ const IngredientInput = () => {
     }
   };
 
+  const handleRemoveIngredient = (index) => {
+    const newIngredients = ingredients.filter((_, i) => i !== index);
+    setIngredients(newIngredients);
+  };
+
   const fetchRecipe = async () => {
     setErrorMessage(""); 
     setRecipe(null); 
     setShowWarning(false); 
     setShowLoader(true);
-
+  
+    const requestData = {
+      ingredients, 
+      difficulty, 
+      mealType, 
+      diet, 
+      portions, 
+      appliances: selectedAppliances
+    };
+  
+    console.log("Datos enviados al backend:", requestData); // Verifica que los datos son correctos
+  
     try {
       const response = await fetch("/api/recipes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          ingredients, 
-          difficulty, 
-          mealType, 
-          diet, 
-          portions, 
-          appliances: selectedAppliances
-        }),
+        body: JSON.stringify(requestData),
       });
-
-      const data = await response.json();
-
+  
       if (!response.ok) {
+        const errorText = await response.text();
         setShowWarning(true);
-        setWarningMessage(data.warningmessage || "Error al generar la receta");
-        throw new Error(`Error ${response.status}: ${await response.text()}`);
+        setWarningMessage(errorText || "Error al generar la receta");
+        throw new Error(`Error ${response.status}: ${errorText}`);
       }
-
+  
+      const data = await response.json();
+  
       if (data.ok === false) {
         setShowWarning(true);
         setWarningMessage(data.warningmessage || "¡Receta no segura!");
         return;
       }
-
-      if (data.error) throw new Error(data.error);
-      
+  
+      if (data.error) {
+        throw new Error(data.error);
+      }
+  
       setRecipe(data);
     } catch (error) {
       console.error("Error en la búsqueda:", error);
@@ -96,6 +108,7 @@ const IngredientInput = () => {
       setShowLoader(false); // ✅ Desactiva el modal de carga cuando la petición finaliza
     }
   };
+  
 
   return (
     <div className="ingredient-input">
@@ -161,7 +174,9 @@ const IngredientInput = () => {
           <div className="ingredient-list-container">
             <ul className="ingredient-list">
               {ingredients.map((ingredient, index) => (
-                <li key={index} className="ingredient-item">{ingredient}</li>
+                <li key={index} onClick={() => handleRemoveIngredient(index)} className="ingredient-item">
+                  {ingredient}
+                </li>
               ))}
             </ul>
             <button onClick={() => setIngredients([])} className="ingredient-button-clear">X</button>
