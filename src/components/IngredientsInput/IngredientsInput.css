@@ -149,6 +149,10 @@
     margin: 5px;
     border-radius: 4px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
+  } .ingredient-item:hover {
+    cursor: url(../../images/borrar.png), pointer;
+    text-decoration: line-through;
+    background:rgb(211, 87, 87);
   }
 
 /* CSS para el selector de dificultad */
