@@ -9,6 +9,12 @@ body {
   flex-direction: column;
 }
 
+.flexCenter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .box-Ingrdients {
   display: flex;
   flex-direction: column;
@@ -48,7 +54,7 @@ body {
 }
 
 .logo {
-  width: 300px;
+  width: 200px;
 }
 
 @media (max-width: 768px) {

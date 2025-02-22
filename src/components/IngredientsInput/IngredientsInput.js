@@ -28,11 +28,6 @@ const IngredientInput = () => {
       `⚠️ <strong>Aviso importante:</strong><br/><br/>
       Las recetas generadas en esta plataforma son creadas por una inteligencia artificial (IA) utilizando el modelo de OpenAI. 
       Aunque intentamos proporcionar recetas útiles y precisas, los resultados pueden contener errores, omisiones o ingredientes inadecuados.<br/><br/>
-      <strong>Por favor, usa tu criterio antes de preparar cualquier receta:</strong><br/>
-      - Verifica los ingredientes y pasos antes de cocinar.<br/>
-      - Asegúrate de que los alimentos sean seguros y adecuados para tu dieta.<br/>
-      - Consulta con un profesional si tienes restricciones alimenticias o alergias.<br/><br/>
-      ❗ <strong>No nos hacemos responsables por errores, daños o problemas derivados del uso de estas recetas.</strong><br/><br/>
       ¡Disfruta cocinando con Comer-IA! 🍽️🤖`
     );
     
@@ -158,8 +153,8 @@ const IngredientInput = () => {
           />
         </div>
 
-        <button className="appliance-button" onClick={() => setShowApplianceModal(true)}>
-          Electrodomésticos
+        <button className="ingredient-button" onClick={() => setShowApplianceModal(true)}>
+          Selecciona Electrodomésticos
         </button>
       </div>
 
@@ -170,6 +165,7 @@ const IngredientInput = () => {
           <button type="submit" className="ingredient-button">Añadir</button>
         </form>
 
+        {/* Modal de ingredientes */}
         {ingredients.length > 0 && (
           <div className="ingredient-list-container">
             <ul className="ingredient-list">
@@ -179,16 +175,17 @@ const IngredientInput = () => {
                 </li>
               ))}
             </ul>
-            <button onClick={() => setIngredients([])} className="ingredient-button-clear">X</button>
+            <button onClick={() => setIngredients([])} className="ingredient-button-clear" title="Borrar ingredientes">X</button>
           </div>
         )}
       </div>
 
-      <button onClick={fetchRecipe} className="generate-button">Generar Receta</button>
+      <button onClick={fetchRecipe} className="ingredient-button">Generar Receta</button>
 
       {/* Modal de Carga (Loader) ✅ */}
       {showLoader && 
       <div className="loader modal-overlay">
+        {/* <img src="/logogif.gif" alt="Cargando..." className="logogif" /> */}
         <div className="loading-text">
           Generando Receta<span className="dot">.</span><span className="dot">.</span
           ><span className="dot">.</span>
@@ -244,7 +241,7 @@ const IngredientInput = () => {
             <h2>¡¡Precaución!!</h2>
             <div className="warning-content">
             <p dangerouslySetInnerHTML={{ __html: warningMessage }} />
-              <button onClick={() => setShowWarning(false)} className="warning-close-button">
+              <button onClick={() => setShowWarning(false)} className="ingredient-button">
                 Entendido
               </button>
             </div>
@@ -257,11 +254,11 @@ const IngredientInput = () => {
         <div className="recipe-result">
           <h2>{recipe.title}</h2>
           <h3>Ingredientes:</h3>
-          <ul>
+          <div className="pasos">
             {recipe.ingredients.map((ingredient, i) => (
               <li key={i}>{ingredient}</li>
             ))}
-          </ul>
+          </div>
           <h3>Pasos:</h3>
           <div className="pasos">
             {recipe.steps.map((step, i) => (
@@ -271,7 +268,10 @@ const IngredientInput = () => {
           {recipe.tips && <p className="recipe-tips">💡 {recipe.tips}</p>}
 
           {/* Botón para generar otra receta completamente nueva */}
-          <button onClick={fetchRecipe} className="new-recipe-button">🔄 Generar Otra Receta</button>
+          <button onClick={fetchRecipe} className="ingredient-button">🔄 Generar Otra Receta</button>
+          <div className="flexCenter">
+            <h5>Comer-IA puede cometer errores. Verifique la coherencia de la receta.</h5>
+          </div>
         </div>
       )}
 
