@@ -18,10 +18,9 @@ const IngredientInput = () => {
     "sartén", "horno", "microondas", "cocina de gas"
   ]);
   const [useStrictIngredients, setUseStrictIngredients] = useState(false);
-
-  // Estados para el modal de advertencia
   const [showWarning, setShowWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     setShowWarning(true);
@@ -132,8 +131,16 @@ const IngredientInput = () => {
 
   return (
     <div className="ingredient-input">
+      {/* Botón para alternar la visibilidad de los filtros */}
+      <button 
+        className="ingredient-button  mg-top-20" 
+        onClick={() => setShowFilters(!showFilters)}
+      >
+        {showFilters ? "Ocultar Filtros" : "Mostrar Filtros"}
+      </button>
+
       {/* Selectores de filtros */}
-      <div className="filters-container">
+      <div className={`filters-container ${showFilters ? "" : "collapsed"}`}>
         <div>
           <label className="difficulty-label">Dificultad:</label>
           <select className="difficulty-select" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
@@ -289,6 +296,9 @@ const IngredientInput = () => {
       {/* Modal Receta */}
       {recipe && (
         <div id="recipe-content" className="recipe-result">
+          <div className="header-recipe">
+            <img src='/logoComerIA.png' width='100px' alt="Comer-IA Logo"/>
+          </div>
           <h2>{recipe.title}</h2>
           <h3>Ingredientes:</h3>
           <div className="pasos">
@@ -307,9 +317,8 @@ const IngredientInput = () => {
             <button onClick={fetchRecipe} className="ingredient-button">🔄 Generar Otra Receta</button>
             <button onClick={handleDownload} className="ingredient-button">📥 Descargar Receta</button>
           </div>
-          <div className="flexCenter">
-            
-            <h5>Comer-IA puede cometer errores. Verifique la coherencia de la receta.</h5>
+          <div className="footer-recipe">
+            <h6>Comer-IA puede cometer errores. Verifique la coherencia de la receta.</h6>
           </div>
         </div>
       )}

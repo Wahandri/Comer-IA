@@ -53,6 +53,10 @@ body {
   margin-bottom: 20px;
 }
 
+.mg-top-20 {
+  margin-top: 20px;
+}
+
 .flexBetween {
   display: flex;
   justify-content: space-between;
