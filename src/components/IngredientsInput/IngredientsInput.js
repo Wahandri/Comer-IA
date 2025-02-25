@@ -1,22 +1,23 @@
 "use client";
 import { useState, useEffect } from "react";
+import { toPng } from "html-to-image"; // Importa la función para convertir a imagen
 import "./IngredientsInput.css";
 import "./AIResponse.css";
-// import logo2 from "../../images/logo2.jpg";
 
 const IngredientInput = () => {
   const [ingredients, setIngredients] = useState([]);
   const [recipe, setRecipe] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const [difficulty, setDifficulty] = useState("media"); 
-  const [mealType, setMealType] = useState("comida"); 
-  const [diet, setDiet] = useState("ninguna"); 
+  const [difficulty, setDifficulty] = useState("media");
+  const [mealType, setMealType] = useState("almuerzo");
+  const [diet, setDiet] = useState("ninguna");
   const [portions, setPortions] = useState(2);
-  const [showLoader, setShowLoader] = useState(false); // ✅ Se vuelve a usar
-  const [showApplianceModal, setShowApplianceModal] = useState(false); // ✅ Se mantiene
+  const [showLoader, setShowLoader] = useState(false);
+  const [showApplianceModal, setShowApplianceModal] = useState(false);
   const [selectedAppliances, setSelectedAppliances] = useState([
-    "sartén", "horno", "microondas",
+    "sartén", "horno", "microondas", "cocina de gas"
   ]);
+  const [useStrictIngredients, setUseStrictIngredients] = useState(false);
 
   // Estados para el modal de advertencia
   const [showWarning, setShowWarning] = useState(false);
@@ -30,13 +31,12 @@ const IngredientInput = () => {
       Aunque intentamos proporcionar recetas útiles y precisas, los resultados pueden contener errores, omisiones o ingredientes inadecuados.<br/><br/>
       ¡Disfruta cocinando con Comer-IA! 🍽️🤖`
     );
-    
-  }, []);    
+  }, []);
 
   const appliancesList = [
     "sartén", "horno", "microondas", "olla a presión", "barbacoa",
     "freidora de aire", "batidora", "cocina de gas", "cocina eléctrica",
-  ]; 
+  ];
 
   const handleAddIngredient = (e) => {
     e.preventDefault();
@@ -53,48 +53,49 @@ const IngredientInput = () => {
   };
 
   const fetchRecipe = async () => {
-    setErrorMessage(""); 
-    setRecipe(null); 
-    setShowWarning(false); 
+    setErrorMessage("");
+    setRecipe(null);
+    setShowWarning(false);
     setShowLoader(true);
-  
+
     const requestData = {
-      ingredients, 
-      difficulty, 
-      mealType, 
-      diet, 
-      portions, 
-      appliances: selectedAppliances
+      ingredients,
+      difficulty,
+      mealType,
+      diet,
+      portions,
+      appliances: selectedAppliances,
+      useStrictIngredients
     };
-  
+
     console.log("Datos enviados al backend:", requestData); // Verifica que los datos son correctos
-  
+
     try {
       const response = await fetch("/api/recipes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestData),
       });
-  
+
       if (!response.ok) {
         const errorText = await response.text();
         setShowWarning(true);
         setWarningMessage(errorText || "Error al generar la receta");
         throw new Error(`Error ${response.status}: ${errorText}`);
       }
-  
+
       const data = await response.json();
-  
+
       if (data.ok === false) {
         setShowWarning(true);
         setWarningMessage(data.warningmessage || "¡Receta no segura!");
         return;
       }
-  
+
       if (data.error) {
         throw new Error(data.error);
       }
-  
+
       setRecipe(data);
     } catch (error) {
       console.error("Error en la búsqueda:", error);
@@ -103,7 +104,31 @@ const IngredientInput = () => {
       setShowLoader(false); // ✅ Desactiva el modal de carga cuando la petición finaliza
     }
   };
-  
+
+  const handleDownload = async () => {
+    const recipeElement = document.getElementById("recipe-content");
+
+    if (recipeElement) {
+      try {
+        // Función para excluir elementos de la imagen
+        const filter = (node) => {
+          return node.id !== "buttonRecipe";
+        };
+
+        const dataUrl = await toPng(recipeElement, { filter });
+
+        // Crear un enlace temporal para descargar la imagen
+        const link = document.createElement("a");
+        link.href = dataUrl;
+        link.download = `${recipe.title}.png`; // Nombre del archivo
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (error) {
+        console.error("Error al generar la imagen:", error);
+      }
+    }
+  };
 
   return (
     <div className="ingredient-input">
@@ -114,7 +139,8 @@ const IngredientInput = () => {
           <select className="difficulty-select" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
             <option value="rápida">Rápida/Sencilla</option>
             <option value="media">Media</option>
-            <option value="pro">Pro</option>
+            <option value="elavorada">Elaborada</option>
+            <option value="difícil">Difícil</option>
           </select>
         </div>
 
@@ -136,7 +162,6 @@ const IngredientInput = () => {
             <option value="vegetariana">Vegetariana</option>
             <option value="baja en calorías">Baja en Calorías</option>
             <option value="sin gluten">Sin Gluten</option>
-            <option value="keto">Keto</option>
             <option value="alta en proteínas">Alta en Proteínas</option>
           </select>
         </div>
@@ -161,13 +186,22 @@ const IngredientInput = () => {
       <div className="ingredients-container">
         <h3>Ingredientes:</h3>
         <form onSubmit={handleAddIngredient} className="ingredient-form">
-          <input type="text" placeholder="Ej: Pollo, arroz, limón..." className="ingredient-field" />
+          <input type="text" placeholder="Escribe un ingrediente" className="ingredient-field" />
           <button type="submit" className="ingredient-button">Añadir</button>
         </form>
 
         {/* Modal de ingredientes */}
         {ingredients.length > 0 && (
           <div className="ingredient-list-container">
+            <label htmlFor="just-this-ingredients" className="checkboxLabel">Usar solo ingredientes seleccionados</label>
+            <label className="checkboxLabel">
+              <input
+                type="checkbox"
+                checked={useStrictIngredients}
+                onChange={() => setUseStrictIngredients(!useStrictIngredients)}
+              />
+            </label>
+
             <ul className="ingredient-list">
               {ingredients.map((ingredient, index) => (
                 <li key={index} onClick={() => handleRemoveIngredient(index)} className="ingredient-item">
@@ -175,38 +209,37 @@ const IngredientInput = () => {
                 </li>
               ))}
             </ul>
-            <button onClick={() => setIngredients([])} className="ingredient-button-clear" title="Borrar ingredientes">X</button>
+            <button onClick={() => setIngredients([])} className="ingredient-button-clear" title="Borrar ingredientes">Borrar todo</button>
           </div>
         )}
       </div>
 
-      <button onClick={fetchRecipe} className="ingredient-button">Generar Receta</button>
+      <button onClick={fetchRecipe} className="button-generate-recipe">Generar Receta</button>
 
       {/* Modal de Carga (Loader) ✅ */}
-      {showLoader && 
-      <div className="loader modal-overlay">
-        {/* <img src="/logogif.gif" alt="Cargando..." className="logogif" /> */}
-        <div className="loading-text">
-          Generando Receta<span className="dot">.</span><span className="dot">.</span
-          ><span className="dot">.</span>
-        </div>
-        <div className="loading-bar-background">
-          <div className="loading-bar">
-            <div className="white-bars-container">
-              <div className="white-bar"></div>
-              <div className="white-bar"></div>
-              <div className="white-bar"></div>
-              <div className="white-bar"></div>
-              <div className="white-bar"></div>
-              <div className="white-bar"></div>
-              <div className="white-bar"></div>
-              <div className="white-bar"></div>
-              <div className="white-bar"></div>
-              <div className="white-bar"></div>
+      {showLoader &&
+        <div className="loader modal-overlay">
+          <img src="/logogif.gif" alt="Cargando..." className="logogif" />
+          <div className="loading-text">
+            Generando Receta<span className="dot">.</span><span className="dot">.</span><span className="dot">.</span>
+          </div>
+          <div className="loading-bar-background">
+            <div className="loading-bar">
+              <div className="white-bars-container">
+                <div className="white-bar"></div>
+                <div className="white-bar"></div>
+                <div className="white-bar"></div>
+                <div className="white-bar"></div>
+                <div className="white-bar"></div>
+                <div className="white-bar"></div>
+                <div className="white-bar"></div>
+                <div className="white-bar"></div>
+                <div className="white-bar"></div>
+                <div className="white-bar"></div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
       }
 
       {/* Modal de electrodomésticos */}
@@ -240,18 +273,22 @@ const IngredientInput = () => {
             <img width="130px" src="/logoAlert.png" alt="Comer-IA" className="warning-logo" />
             <h2>¡¡Precaución!!</h2>
             <div className="warning-content">
-            <p dangerouslySetInnerHTML={{ __html: warningMessage }} />
+              <p dangerouslySetInnerHTML={{ __html: warningMessage }} />
               <button onClick={() => setShowWarning(false)} className="ingredient-button">
                 Entendido
               </button>
+            </div>
+            <div className="warning-footer">
+              <h6>Este mensaje esta generado por IA y puede contener errores.</h6>
+              <h6>Prueba a intentar generarla otra vez</h6>
             </div>
           </div>
         </div>
       )}
 
-      {/* Receta */}
+      {/* Modal Receta */}
       {recipe && (
-        <div className="recipe-result">
+        <div id="recipe-content" className="recipe-result">
           <h2>{recipe.title}</h2>
           <h3>Ingredientes:</h3>
           <div className="pasos">
@@ -266,15 +303,16 @@ const IngredientInput = () => {
             ))}
           </div>
           {recipe.tips && <p className="recipe-tips">💡 {recipe.tips}</p>}
-
-          {/* Botón para generar otra receta completamente nueva */}
-          <button onClick={fetchRecipe} className="ingredient-button">🔄 Generar Otra Receta</button>
+          <div id="buttonRecipe" className="flexBetween ">
+            <button onClick={fetchRecipe} className="ingredient-button">🔄 Generar Otra Receta</button>
+            <button onClick={handleDownload} className="ingredient-button">📥 Descargar Receta</button>
+          </div>
           <div className="flexCenter">
+            
             <h5>Comer-IA puede cometer errores. Verifique la coherencia de la receta.</h5>
           </div>
         </div>
       )}
-
     </div>
   );
 };

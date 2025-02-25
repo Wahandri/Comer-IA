@@ -5,23 +5,27 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Función para limpiar el JSON
+function cleanJson(jsonString) {
+  // Eliminar comas adicionales al final de arrays y objetos
+  return jsonString.replace(/,\s*([\]}])/g, '$1');
+}
+
 export async function POST(request) {
   try {
-    const { ingredients, difficulty, mealType, diet, portions, appliances, regeneratePart } = await request.json();
+    const { ingredients, difficulty, mealType, diet, portions, appliances, regeneratePart, useStrictIngredients } = await request.json();
     
     console.log("📌 Ingredientes recibidos:", ingredients);
     console.log("📌 Filtros -> Dificultad:", difficulty, "| Tipo de comida:", mealType, "| Dieta:", diet, "| Porciones:", portions);
     console.log("📌 Electrodomésticos:", appliances);
     console.log("📌 Regenerar parte:", regeneratePart);
+    console.log("📌 Usar solo ingredientes seleccionados:", useStrictIngredients);
 
     if (!ingredients || ingredients.length === 0) {
       return NextResponse.json({ error: "Debes proporcionar ingredientes." }, { status: 400 });
     }
 
-    // Solución para evitar el error de hidratación en Next.js
-    const randomFactor = typeof window !== "undefined" ? Math.random() : 0;
-
-    // Construcción del prompt optimizado (sin cantidades en los ingredientes)
+    // Construcción del prompt optimizado
     let prompt = `
       Eres un chef profesional y experto en nutrición. Tu tarea es generar una receta detallada **en formato JSON** basada en los siguientes parámetros:  
 
@@ -32,7 +36,7 @@ export async function POST(request) {
       - Restricción dietética: ${diet}
       - Cantidad de porciones: ${portions}
       - Electrodomésticos disponibles: ${appliances.join(", ") || "ninguno"}
-
+      - Receta estricta: ${useStrictIngredients ? "true" : "false"}
       ---
       
       📌 **Formato estricto esperado en la respuesta **: SOLO DEVOLVERAS UN JSON. Sin nada antes ni despues.
@@ -50,13 +54,18 @@ export async function POST(request) {
       
       📌 **Instrucciones obligatorias**:
       1 **Formato de salida:** Solo responde en **JSON válido**, sin texto adicional.  
-      2 **Ingredientes:** Devuelve solo una lista de nombres de ingredientes, sin cantidades.  
-      3 **Pasos de preparación:** Explica cada paso con **claridad**, incluyendo tiempos de cocción si es necesario.  
-      4 **Recetas únicas:** Evita generar recetas repetitivas o sin sentido.  
-      5 **Coherencia:** 
+      2 **Ingredientes:** Devuelve solo una lista de nombres de ingredientes.  
+      3 **Pasos de preparación:** Explica cada paso con **claridad** si es necesario el paso sera mas largo, incluyendo tiempos de cocción si es necesario.  
+      4 **Recetas únicas:** Evita generar recetas repetitivas o sin sentido. 
+      5 **EJEMPLO DE INGREDIENTES**
+      - En la respuesta de ingredientes podras añadir: Sal, pimienta, aceite, agua, azúcar, etc.. Ahun que no esten en la lista de ingredientes.
+      - Si "Receta estricta" es **false**, y los ingredientes son ["pollo", "arroz"] deverias añadir algunos ingredientes para mejorar la receta con una salsa, especias, etc.
+      - Si "Receta estricta" es **true**, y los ingredientes son ["pollo", "arroz"] no puedes añadir ni omitir ingredientes. 
+      6 **Coherencia:** 
          - Si se especifica una restricción dietética, **evita** ingredientes que la contradigan.
          - Si un electrodoméstico no está disponible, **no lo uses en la receta**.  
          - La receta debe ser **realista y factible** con los ingredientes dados.
+      7 **Nombre de la receta:** Debe ser **creativo y atractivo**.
          
       🚨 **INSTRUCCIONES PARA "warningmessage":** 
       1 **Recetas no seguras:** Si la receta es **poco saludable o peligrosa**, activa "ok": false y explicar en "warningmessage".
@@ -70,7 +79,12 @@ export async function POST(request) {
       - Solo responde en formato JSON válido.
       - La lista de ingredientes debe contener nombres y cantidades.  
       - Si "ok": false, no generes la receta y solo devuelve el JSON con el "ok" y "warningmessage". Los demas valores seran null.  
-      - 🚀 Genera una receta completamente nueva y diferente en cada intento. Este intento (${randomFactor}) debe ser único.
+      **Lista de ingredientes:**  
+     - Si "Receta estricta" es **true**, usa **solamente** los ingredientes dados.  
+     - Si "Receta estricta" es **true**, **no** puedes añadir ni omitir ingredientes.
+     - Si "Receta estricta" es **false**, puedes añadir ingredientes básicos para mejorar la receta, sobretodo si los ingredientes disponibles son pocos (1 a 4).
+     - Si "Receta estricta" es **false** y hay muchos ingredientes, puedes omitir algunos ingredientes.
+     
     
       RECUERDA RESPONDER SIEMPRE EN FORMATO JSON VÁLIDO.
       `;
@@ -90,11 +104,33 @@ export async function POST(request) {
       return NextResponse.json({ error: "Respuesta inválida de OpenAI." }, { status: 500 });
     }
 
+    // Limpiar la respuesta para extraer solo el JSON
+    const rawContent = response.choices[0].message.content;
+
+    // Intentar extraer el JSON de un bloque ```json ``` (si existe)
+    let jsonContent = rawContent.match(/```json\s*([\s\S]*?)\s*```/);
+
+    // Si no se encuentra un bloque ```json ```, asumir que la respuesta es directamente un JSON
+    if (!jsonContent || !jsonContent[1]) {
+      jsonContent = rawContent; // Usar la respuesta completa como JSON
+    } else {
+      jsonContent = jsonContent[1].trim(); // Extraer el JSON del bloque ```json ```
+    }
+
+    // Validar que el contenido es un JSON válido
+    if (!jsonContent) {
+      console.error("❌ No se encontró JSON válido en la respuesta:", rawContent);
+      return NextResponse.json({ error: "Formato de respuesta inválido." }, { status: 500 });
+    }
+
+    // Limpiar el JSON antes de analizarlo
+    const cleanedJsonContent = cleanJson(jsonContent);
+
     let recipe;
     try {
-      recipe = JSON.parse(response.choices[0].message.content);
+      recipe = JSON.parse(cleanedJsonContent); // Analizar el JSON limpio
     } catch (error) {
-      console.error("❌ Error al analizar JSON de OpenAI:", error, response.choices[0].message.content);
+      console.error("❌ Error al analizar JSON de OpenAI:", error, cleanedJsonContent);
       return NextResponse.json({ error: "Error al procesar la respuesta de OpenAI." }, { status: 500 });
     }
 
