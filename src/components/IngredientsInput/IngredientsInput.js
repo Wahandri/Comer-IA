@@ -141,7 +141,7 @@ const IngredientInput = () => {
 
       {/* Selectores de filtros */}
       <div className={`filters-container ${showFilters ? "" : "collapsed"}`}>
-        <div>
+        <div className="flexRows">
           <label className="difficulty-label">Dificultad:</label>
           <select className="difficulty-select" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
             <option value="rápida">Rápida/Sencilla</option>

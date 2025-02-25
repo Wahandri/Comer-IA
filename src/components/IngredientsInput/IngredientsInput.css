@@ -218,7 +218,6 @@
 }
 
 .difficulty-select {
-  width: 100%;
   padding: 8px;
   margin-top: 5px;
   border: 1px solid #ccc;
@@ -384,9 +383,14 @@
 
 
 
-@media (max-width: 768px) {
+@media (max-width: 810px) {
   .filters-container {
     grid-template-columns: 1fr;
+  }
+
+  ..difficulty-select {
+    width: 200px;
+    
   }
 
   .ingredient-form {
