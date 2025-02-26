@@ -388,11 +388,6 @@
     grid-template-columns: 1fr;
   }
 
-  ..difficulty-select {
-    width: 200px;
-    
-  }
-
   .ingredient-form {
     flex-direction: column;
   }
