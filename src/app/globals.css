@@ -24,7 +24,7 @@ body {
   margin-top: 20px;
   padding-bottom: 20px;
   gap: 10px;
-  width: 90%;
+  max-width: 1000px;
   background: linear-gradient(
         170deg,
         rgba(253, 230, 125, 0.623) 0%,
