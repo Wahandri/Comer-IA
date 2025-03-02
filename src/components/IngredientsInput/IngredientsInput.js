@@ -26,8 +26,7 @@ const IngredientInput = () => {
     setShowWarning(true);
     setWarningMessage(
       `⚠️ <strong>Aviso importante:</strong><br/><br/>
-      Las recetas generadas en esta plataforma son creadas por una inteligencia artificial (IA) utilizando el modelo de OpenAI. 
-      Aunque intentamos proporcionar recetas útiles y precisas, los resultados pueden contener errores, omisiones o ingredientes inadecuados.<br/><br/>
+      Las recetas generadas en esta plataforma son creadas por una IA.<br/> Los resultados pueden contener errores.<br/><br/>
       ¡Disfruta cocinando con Comer-IA! 🍽️🤖`
     );
   }, []);
@@ -278,7 +277,6 @@ const IngredientInput = () => {
         <div className="modal-overlay">
           <div className="warning-modal">
             <img width="130px" src="/logoAlert.png" alt="Comer-IA" className="warning-logo" />
-            <h2>¡¡Precaución!!</h2>
             <div className="warning-content">
               <p dangerouslySetInnerHTML={{ __html: warningMessage }} />
               <button onClick={() => setShowWarning(false)} className="ingredient-button">
@@ -286,8 +284,8 @@ const IngredientInput = () => {
               </button>
             </div>
             <div className="warning-footer">
-              <h6>Este mensaje esta generado por IA y puede contener errores.</h6>
-              <h6>Prueba a intentar generarla otra vez</h6>
+              {/* <h6>Este mensaje esta generado por IA y puede contener errores.</h6>
+              <h6>Prueba a intentar generarla otra vez</h6> */}
             </div>
           </div>
         </div>
