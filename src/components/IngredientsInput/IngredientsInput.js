@@ -15,7 +15,7 @@ const IngredientInput = () => {
   const [showLoader, setShowLoader] = useState(false);
   const [showApplianceModal, setShowApplianceModal] = useState(false);
   const [selectedAppliances, setSelectedAppliances] = useState([
-    "sartén", "horno", "microondas", "cocina de gas"
+    "todos"
   ]);
   const [useStrictIngredients, setUseStrictIngredients] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
