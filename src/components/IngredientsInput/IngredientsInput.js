@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { toPng } from "html-to-image"; // Importa la función para convertir a imagen
+import { toPng } from "html-to-image";
 import "./IngredientsInput.css";
 import "./AIResponse.css";
 
@@ -153,10 +153,14 @@ const IngredientInput = () => {
         <div>
           <label className="meal-label">Tipo de comida:</label>
           <select className="meal-select" value={mealType} onChange={(e) => setMealType(e.target.value)}>
-            <option value="desayuno">Desayuno</option>
-            <option value="almuerzo">Almuerzo</option>
-            <option value="cena">Cena</option>
-            <option value="postre">Postre</option>
+            <option value="Todas">Todas</option>
+            <option value="Sopas/cremas">Sopas y cremas</option>
+            <option value="Guisos/estofados">Guisos y estofados</option>
+            <option value="Postres/reposterí">Postres y reposterí</option>
+            <option value="Panadería/masas">Panadería y masas</option>
+            <option value="Ensaladas/platos-frío">Ensaladas y platos frío</option>
+            <option value="Salsas/aderezos">Salsas y aderezos</option>
+            <option value="Bebidas/batido">Bebidas y batido</option>
           </select>
         </div>
 
