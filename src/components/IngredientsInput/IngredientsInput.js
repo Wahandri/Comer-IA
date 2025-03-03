@@ -309,24 +309,46 @@ const IngredientInput = () => {
         <div className="modal-overlay">
           <div className="modal">
             <h2>Selecciona los electrodomésticos disponibles:</h2>
+            
+            {/* Checkbox para seleccionar/deseleccionar todos */}
+            <label className="select-all">
+              <input
+                type="checkbox"
+                checked={selectedAppliances.length === appliancesList.length} // Marca si están todos seleccionados
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedAppliances(appliancesList); // Seleccionar todos
+                  } else {
+                    setSelectedAppliances([]); // Deseleccionar todos
+                  }
+                }}
+              />
+              Seleccionar todos
+            </label>
+
+            {/* Lista de electrodomésticos con checkboxes */}
             {appliancesList.map((appliance) => (
               <label key={appliance}>
                 <input
                   type="checkbox"
                   checked={selectedAppliances.includes(appliance)}
-                  onChange={() => setSelectedAppliances((prev) =>
-                    prev.includes(appliance)
-                      ? prev.filter((a) => a !== appliance)
-                      : [...prev, appliance]
-                  )}
+                  onChange={() =>
+                    setSelectedAppliances((prev) =>
+                      prev.includes(appliance)
+                        ? prev.filter((a) => a !== appliance) // Si ya está, lo quitamos
+                        : [...prev, appliance] // Si no está, lo añadimos
+                    )
+                  }
                 />
                 {appliance}
               </label>
             ))}
+
             <button onClick={() => setShowApplianceModal(false)}>Cerrar</button>
           </div>
         </div>
       )}
+
 
       {/* Modal de Advertencia */}
       {showWarning && (
