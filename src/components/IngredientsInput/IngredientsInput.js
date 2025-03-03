@@ -50,6 +50,7 @@ const IngredientInput = () => {
     setIngredients(newIngredients);
   };
 
+  /*
   const fetchRecipe = async () => {
     setErrorMessage("");
     setRecipe(null);
@@ -66,7 +67,7 @@ const IngredientInput = () => {
       useStrictIngredients
     };
 
-    console.log("Datos enviados al backend:", requestData); // Verifica que los datos son correctos
+    console.log("Datos enviados al backend:", requestData);
 
     try {
       const response = await fetch("/api/recipes", {
@@ -99,9 +100,60 @@ const IngredientInput = () => {
       console.error("Error en la búsqueda:", error);
       setErrorMessage("Hubo un problema al generar la receta. Inténtalo de nuevo.");
     } finally {
-      setShowLoader(false); // ✅ Desactiva el modal de carga cuando la petición finaliza
+      setShowLoader(false);
+    }
+  };*/
+  const fetchRecipe = async (forceNewRecipe = false) => {
+    setShowLoader(true);
+    setShowWarning(false);
+    setErrorMessage("");
+  
+    const requestData = {
+      ingredients,
+      difficulty,
+      mealType,
+      diet,
+      portions,
+      appliances: selectedAppliances,
+      useStrictIngredients,
+      timestamp: forceNewRecipe ? Date.now() : undefined, // Agrega un timestamp para forzar una nueva receta
+    };
+  
+    try {
+      const response = await fetch("/api/recipes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestData),
+      });
+  
+      if (!response.ok) {
+        const errorText = await response.text();
+        setShowWarning(true);
+        setWarningMessage(errorText || "Error al generar la receta");
+        throw new Error(`Error ${response.status}: ${errorText}`);
+      }
+  
+      const data = await response.json();
+  
+      if (data.ok === false) {
+        setShowWarning(true);
+        setWarningMessage(data.warningmessage || "¡Receta no segura!");
+        return;
+      }
+  
+      if (data.error) {
+        throw new Error(data.error);
+      }
+  
+      setRecipe(data);
+    } catch (error) {
+      console.error("Error en la búsqueda:", error);
+      setErrorMessage("Hubo un problema al generar la receta. Inténtalo de nuevo.");
+    } finally {
+      setShowLoader(false);
     }
   };
+  
 
   const handleDownload = async () => {
     const recipeElement = document.getElementById("recipe-content");
@@ -226,7 +278,7 @@ const IngredientInput = () => {
 
       <button onClick={fetchRecipe} className="button-generate-recipe">Generar Receta</button>
 
-      {/* Modal de Carga (Loader) ✅ */}
+      {/* Modal de Carga (Loader) */}
       {showLoader &&
         <div className="loader modal-overlay">
           <img src="/logogif.gif" alt="Cargando..." className="logogif" />
@@ -316,7 +368,9 @@ const IngredientInput = () => {
           </div>
           {recipe.tips && <p className="recipe-tips">💡 {recipe.tips}</p>}
           <div id="buttonRecipe" className="flexBetween ">
-            <button onClick={fetchRecipe} className="ingredient-button">🔄 Generar Otra Receta</button>
+            <button onClick={() => fetchRecipe(true)} className="ingredient-button">
+              🔄 Generar Otra Receta
+            </button>
             <button onClick={handleDownload} className="ingredient-button">📥 Descargar Receta</button>
           </div>
           <div className="footer-recipe">
