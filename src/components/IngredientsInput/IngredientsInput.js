@@ -50,59 +50,6 @@ const IngredientInput = () => {
     setIngredients(newIngredients);
   };
 
-  /*
-  const fetchRecipe = async () => {
-    setErrorMessage("");
-    setRecipe(null);
-    setShowWarning(false);
-    setShowLoader(true);
-
-    const requestData = {
-      ingredients,
-      difficulty,
-      mealType,
-      diet,
-      portions,
-      appliances: selectedAppliances,
-      useStrictIngredients
-    };
-
-    console.log("Datos enviados al backend:", requestData);
-
-    try {
-      const response = await fetch("/api/recipes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestData),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        setShowWarning(true);
-        setWarningMessage(errorText || "Error al generar la receta");
-        throw new Error(`Error ${response.status}: ${errorText}`);
-      }
-
-      const data = await response.json();
-
-      if (data.ok === false) {
-        setShowWarning(true);
-        setWarningMessage(data.warningmessage || "¡Receta no segura!");
-        return;
-      }
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      setRecipe(data);
-    } catch (error) {
-      console.error("Error en la búsqueda:", error);
-      setErrorMessage("Hubo un problema al generar la receta. Inténtalo de nuevo.");
-    } finally {
-      setShowLoader(false);
-    }
-  };*/
   const fetchRecipe = async (forceNewRecipe = false) => {
     setShowLoader(true);
     setShowWarning(false);
@@ -116,7 +63,7 @@ const IngredientInput = () => {
       portions,
       appliances: selectedAppliances,
       useStrictIngredients,
-      timestamp: forceNewRecipe ? Date.now() : undefined, // Agrega un timestamp para forzar una nueva receta
+      timestamp: forceNewRecipe ? Date.now() : undefined, 
     };
   
     try {
@@ -130,7 +77,7 @@ const IngredientInput = () => {
         const errorText = await response.text();
         setShowWarning(true);
         setWarningMessage(errorText || "Error al generar la receta");
-        throw new Error(`Error ${response.status}: ${errorText}`);
+        throw new Error(` ${errorText}`);
       }
   
       const data = await response.json();
@@ -198,7 +145,6 @@ const IngredientInput = () => {
             <option value="rápida">Rápida/Sencilla</option>
             <option value="media">Media</option>
             <option value="elavorada">Elaborada</option>
-            <option value="difícil">Difícil</option>
           </select>
         </div>
 
@@ -314,12 +260,12 @@ const IngredientInput = () => {
             <label className="select-all">
               <input
                 type="checkbox"
-                checked={selectedAppliances.length === appliancesList.length} // Marca si están todos seleccionados
+                checked={selectedAppliances.length === appliancesList.length} 
                 onChange={(e) => {
                   if (e.target.checked) {
-                    setSelectedAppliances(appliancesList); // Seleccionar todos
+                    setSelectedAppliances(appliancesList);
                   } else {
-                    setSelectedAppliances([]); // Deseleccionar todos
+                    setSelectedAppliances([]);
                   }
                 }}
               />
@@ -335,8 +281,8 @@ const IngredientInput = () => {
                   onChange={() =>
                     setSelectedAppliances((prev) =>
                       prev.includes(appliance)
-                        ? prev.filter((a) => a !== appliance) // Si ya está, lo quitamos
-                        : [...prev, appliance] // Si no está, lo añadimos
+                        ? prev.filter((a) => a !== appliance) 
+                        : [...prev, appliance] 
                     )
                   }
                 />
