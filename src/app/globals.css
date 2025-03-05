@@ -9,6 +9,12 @@ body {
   flex-direction: column;
 }
 
+.h1Page {
+  font-size: 25px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
 .flexCenter {
   display: flex;
   justify-content: center;
