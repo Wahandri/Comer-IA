@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toPng } from "html-to-image";
 import "./IngredientsInput.css";
 import "./AIResponse.css";
@@ -14,13 +14,14 @@ const IngredientInput = () => {
   const [portions, setPortions] = useState(2);
   const [showLoader, setShowLoader] = useState(false);
   const [showApplianceModal, setShowApplianceModal] = useState(false);
-  const [selectedAppliances, setSelectedAppliances] = useState([
-    "todos"
-  ]);
+  const [selectedAppliances, setSelectedAppliances] = useState(["todos"]);
   const [useStrictIngredients, setUseStrictIngredients] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Referencia para el scroll automático
+  const recipeRef = useRef(null);
 
   useEffect(() => {
     setShowWarning(true);
@@ -54,7 +55,7 @@ const IngredientInput = () => {
     setShowLoader(true);
     setShowWarning(false);
     setErrorMessage("");
-  
+
     const requestData = {
       ingredients,
       difficulty,
@@ -63,36 +64,41 @@ const IngredientInput = () => {
       portions,
       appliances: selectedAppliances,
       useStrictIngredients,
-      timestamp: forceNewRecipe ? Date.now() : undefined, 
+      timestamp: forceNewRecipe ? Date.now() : undefined,
     };
-  
+
     try {
       const response = await fetch("/api/recipes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestData),
       });
-  
+
       if (!response.ok) {
         const errorText = await response.text();
         setShowWarning(true);
         setWarningMessage(errorText || "Error al generar la receta");
         throw new Error(` ${errorText}`);
       }
-  
+
       const data = await response.json();
-  
+
       if (data.ok === false) {
         setShowWarning(true);
         setWarningMessage(data.warningmessage || "¡Receta no segura!");
         return;
       }
-  
+
       if (data.error) {
         throw new Error(data.error);
       }
-  
+
       setRecipe(data);
+
+      // Hacer scroll hacia la receta después de que se haya establecido
+      if (recipeRef.current) {
+        recipeRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     } catch (error) {
       console.error("Error en la búsqueda:", error);
       setErrorMessage("Hubo un problema al generar la receta. Inténtalo de nuevo.");
@@ -100,7 +106,6 @@ const IngredientInput = () => {
       setShowLoader(false);
     }
   };
-  
 
   const handleDownload = async () => {
     const recipeElement = document.getElementById("recipe-content");
@@ -130,8 +135,8 @@ const IngredientInput = () => {
   return (
     <div className="ingredient-input">
       {/* Botón para alternar la visibilidad de los filtros */}
-      <button 
-        className="ingredient-button  mg-top-20" 
+      <button
+        className="ingredient-button  mg-top-20"
         onClick={() => setShowFilters(!showFilters)}
       >
         {showFilters ? "Ocultar Filtros" : "Mostrar Filtros"}
@@ -139,7 +144,7 @@ const IngredientInput = () => {
 
       {/* Selectores de filtros */}
       <div className={`filters-container ${showFilters ? "" : "collapsed"}`}>
-        <div className="flexRows">
+        <div className="filter-item">
           <label className="difficulty-label">Dificultad:</label>
           <select className="difficulty-select" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
             <option value="rápida">Rápida/Sencilla</option>
@@ -148,7 +153,7 @@ const IngredientInput = () => {
           </select>
         </div>
 
-        <div>
+        <div className="filter-item">
           <label className="meal-label">Tipo de comida:</label>
           <select className="meal-select" value={mealType} onChange={(e) => setMealType(e.target.value)}>
             <option value="Todas">Todas</option>
@@ -162,7 +167,7 @@ const IngredientInput = () => {
           </select>
         </div>
 
-        <div>
+        <div className="filter-item">
           <label className="meal-label">Dieta:</label>
           <select className="diet-select" value={diet} onChange={(e) => setDiet(e.target.value)}>
             <option value="ninguna">Ninguna</option>
@@ -174,7 +179,7 @@ const IngredientInput = () => {
           </select>
         </div>
 
-        <div>
+        <div className="filter-item">
           <label className="meal-label">Porciones:</label>
           <input
             type="number"
@@ -186,9 +191,11 @@ const IngredientInput = () => {
           />
         </div>
 
-        <button className="ingredient-button" onClick={() => setShowApplianceModal(true)}>
-          Selecciona Electrodomésticos
-        </button>
+        <div className="filter-item mg-b-20">
+          <button className="ingredient-button" onClick={() => setShowApplianceModal(true)}>
+            Selecciona Electrodomésticos
+          </button>
+        </div>
       </div>
 
       <div className="ingredients-container">
@@ -255,12 +262,12 @@ const IngredientInput = () => {
         <div className="modal-overlay">
           <div className="modal">
             <h2>Selecciona los electrodomésticos disponibles:</h2>
-            
+
             {/* Checkbox para seleccionar/deseleccionar todos */}
             <label className="select-all">
               <input
                 type="checkbox"
-                checked={selectedAppliances.length === appliancesList.length} 
+                checked={selectedAppliances.length === appliancesList.length}
                 onChange={(e) => {
                   if (e.target.checked) {
                     setSelectedAppliances(appliancesList);
@@ -281,8 +288,8 @@ const IngredientInput = () => {
                   onChange={() =>
                     setSelectedAppliances((prev) =>
                       prev.includes(appliance)
-                        ? prev.filter((a) => a !== appliance) 
-                        : [...prev, appliance] 
+                        ? prev.filter((a) => a !== appliance)
+                        : [...prev, appliance]
                     )
                   }
                 />
@@ -294,7 +301,6 @@ const IngredientInput = () => {
           </div>
         </div>
       )}
-
 
       {/* Modal de Advertencia */}
       {showWarning && (
@@ -317,9 +323,9 @@ const IngredientInput = () => {
 
       {/* Modal Receta */}
       {recipe && (
-        <div id="recipe-content" className="recipe-result">
+        <div id="recipe-content" className="recipe-result" ref={recipeRef}>
           <div className="header-recipe">
-            <img src='/logoComerIA.png' width='100px' alt="Comer-IA Logo"/>
+            <img src='/logoComerIA.png' width='100px' alt="Comer-IA Logo" />
           </div>
           <h2>{recipe.title}</h2>
           <h3>Ingredientes:</h3>
