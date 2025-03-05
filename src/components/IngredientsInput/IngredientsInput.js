@@ -228,7 +228,6 @@ const IngredientInput = () => {
           </div>
         )}
       </div>
-
       <button onClick={fetchRecipe} className="button-generate-recipe">Generar Receta</button>
 
       {/* Modal de Carga (Loader) */}

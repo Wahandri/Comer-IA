@@ -10,6 +10,7 @@ export default function Home() {
         <title>Comer-IA</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
+      
       <main className="container">
         <img src='/logoComerIA.gif' width='300px' alt="Comer-IA Logo" className="logo" />
         <h1>Comer-IA</h1>
