@@ -7,14 +7,53 @@ const openai = new OpenAI({
 
 // Función para limpiar el JSON
 function cleanJson(jsonString) {
-  // Eliminar comas adicionales al final de arrays y objetos
   return jsonString.replace(/,\s*([\]}])/g, '$1');
 }
+
+// Contexto inicial que se enviará una sola vez
+const initialContext = `
+Eres un chef profesional y experto en nutrición. Tu tarea es generar recetas detalladas **en formato JSON** basadas en los parámetros que te proporcionaré.
+
+📌 **Formato estricto esperado en la respuesta **: SOLO DEVOLVERAS UN JSON. Sin nada antes ni después.
+{
+  "ok": true,
+  "warningmessage": null,
+  "title": "Nombre de la receta",
+  "ingredients": ["Ingrediente1 + cantidad", "Ingrediente2 + cantidad", "Ingrediente3 + cantidad"],
+  "steps": [
+    "1. Mezcla los ingredientes en un bowl.",
+    "2. Cocina a fuego medio por 10 minutos."
+  ],
+  "tips": "Puedes agregar un poco de limón para mejorar el sabor."
+}
+
+📌 **Instrucciones obligatorias**:
+1 **Formato de salida:** Solo responde en **JSON válido**, sin texto adicional.  
+2 **Ingredientes:** Devuelve solo una lista de nombres de ingredientes.  
+3 **Pasos de preparación:** Explica cada paso con **claridad** si es necesario el paso será más largo, incluyendo tiempos de cocción si es necesario.  
+4 **Recetas únicas:** Evita generar recetas repetitivas o sin sentido. 
+5 **EJEMPLO DE INGREDIENTES**
+- En la respuesta de ingredientes podrás añadir: Sal, pimienta, aceite, agua, azúcar, etc.. Aunque no estén en la lista de ingredientes.
+- Si "Receta estricta" es **false**, y los ingredientes son ["pollo", "arroz"], deberías añadir algunos ingredientes para mejorar la receta con una salsa, especias, etc.
+- Si "Receta estricta" es **true**, y los ingredientes son ["pollo", "arroz"], no puedes añadir ni omitir ingredientes. 
+6 **Coherencia:** 
+   - Si se especifica una restricción dietética, **evita** ingredientes que la contradigan.
+   - Si un electrodoméstico no está disponible, **no lo uses en la receta**.  
+   - La receta debe ser **realista y factible** con los ingredientes dados.
+7 **Nombre de la receta:** Debe ser **creativo y atractivo**.
+   
+🚨 **INSTRUCCIONES PARA "warningmessage":** 
+1 **Recetas no seguras:** Si la receta es **poco saludable o peligrosa**, activa "ok": false y explica en "warningmessage".
+2 **Ingredientes no compatibles con la dieta especificada:** Si la receta contiene ingredientes que contradicen la dieta, activa "ok": false y explica en "warningmessage".
+3 **Ingredientes inválidos:** Si la lista contiene palabras que no son alimentos (sentimientos, conceptos, etc), activa "ok": false.  
+4 **Advertencias:** Si la receta **no es comestible o es peligrosa** (ej: objetos, cosas, ingredientes peligrosos de ingerir), "ok": false y incluye un "warningmessage" explicando el motivo (**el mensaje tendrá un poco de humor**).  
+5 **Si la receta contiene nombres propios, conceptos, verbos o palabras que no son alimentos, activa "ok": false y explica en "warningmessage": "mensaje".**
+`;
 
 export async function POST(request) {
   try {
     const { ingredients, difficulty, mealType, diet, portions, appliances, regeneratePart, useStrictIngredients } = await request.json();
-    
+
     console.log("📌 Ingredientes recibidos:", ingredients);
     console.log("📌 Filtros -> Dificultad:", difficulty, "| Tipo de comida:", mealType, "| Dieta:", diet, "| Porciones:", portions);
     console.log("📌 Electrodomésticos:", appliances);
@@ -25,10 +64,8 @@ export async function POST(request) {
       return NextResponse.json({ error: "Debes proporcionar ingredientes." }, { status: 400 });
     }
 
-    // Construcción del prompt optimizado
-    let prompt = `
-      Eres un chef profesional y experto en nutrición. Tu tarea es generar una receta detallada **en formato JSON** basada en los siguientes parámetros:  
-
+    // Construir el prompt con los parámetros específicos
+    const userPrompt = `
       📌 **Parámetros de entrada**:
       - Ingredientes disponibles: ${ingredients.join(", ")}
       - Nivel de dificultad: ${difficulty}
@@ -37,64 +74,20 @@ export async function POST(request) {
       - Cantidad de porciones: ${portions}
       - Electrodomésticos disponibles: ${appliances.join(", ") || "ninguno"}
       - Receta estricta: ${useStrictIngredients ? "true" : "false"}
-      ---
-      
-      📌 **Formato estricto esperado en la respuesta **: SOLO DEVOLVERAS UN JSON. Sin nada antes ni despues.
-      {
-        "ok": true,
-        "warningmessage": null,
-        "title": "Nombre de la receta",
-        "ingredients": ["Ingrediente1 + cantidad", "Ingrediente2 + cantidad", "Ingrediente3 + cantidad"],
-        "steps": [
-          "1. Mezcla los ingredientes en un bowl.",
-          "2. Cocina a fuego medio por 10 minutos."
-        ],
-        "tips": "Puedes agregar un poco de limón para mejorar el sabor."
-      }
-      
-      📌 **Instrucciones obligatorias**:
-      1 **Formato de salida:** Solo responde en **JSON válido**, sin texto adicional.  
-      2 **Ingredientes:** Devuelve solo una lista de nombres de ingredientes.  
-      3 **Pasos de preparación:** Explica cada paso con **claridad** si es necesario el paso sera mas largo, incluyendo tiempos de cocción si es necesario.  
-      4 **Recetas únicas:** Evita generar recetas repetitivas o sin sentido. 
-      5 **EJEMPLO DE INGREDIENTES**
-      - En la respuesta de ingredientes podras añadir: Sal, pimienta, aceite, agua, azúcar, etc.. Ahun que no esten en la lista de ingredientes.
-      - Si "Receta estricta" es **false**, y los ingredientes son ["pollo", "arroz"] deverias añadir algunos ingredientes para mejorar la receta con una salsa, especias, etc.
-      - Si "Receta estricta" es **true**, y los ingredientes son ["pollo", "arroz"] no puedes añadir ni omitir ingredientes. 
-      6 **Coherencia:** 
-         - Si se especifica una restricción dietética, **evita** ingredientes que la contradigan.
-         - Si un electrodoméstico no está disponible, **no lo uses en la receta**.  
-         - La receta debe ser **realista y factible** con los ingredientes dados.
-      7 **Nombre de la receta:** Debe ser **creativo y atractivo**.
-         
-      🚨 **INSTRUCCIONES PARA "warningmessage":** 
-      1 **Recetas no seguras:** Si la receta es **poco saludable o peligrosa**, activa "ok": false y explicar en "warningmessage".
-      2 **Ingredientes no compatibles con la dieta especificada:** Si la receta contiene ingredientes que contradicen la dieta, activa "ok": false y explica en "warningmessage".
-      3 **Ingredientes inválidos:** Si la lista contiene palabras que no son alimentos (sentimientos, conceptos, etc), activa "ok": false.  
-      4 **Advertencias:** Si la receta **no es comestible o es peligrosa** (ej: objetos, cosas, ingredientes peligrosos de ingerir), "ok": false y incluye un "warningmessage" explicando el motivo (**el mensaje tendra un poco de humor**).  
-      5 **Si la receta contiene nombres propios, conceptos, verbos o palabras que no son alimentos, activa "ok": false y explica en "warningmessage": "mensaje".**
-      ---
+    `;
 
-      🚨 **IMPORTANTE:** 
-      - Solo responde en formato JSON válido.
-      - La lista de ingredientes debe contener nombres y cantidades.  
-      - Si "ok": false, no generes la receta y solo devuelve el JSON con el "ok" y "warningmessage". Los demas valores seran null.  
-      **Lista de ingredientes:**  
-     - Si "Receta estricta" es **true**, usa **solamente** los ingredientes dados.  
-     - Si "Receta estricta" es **true**, **no** puedes añadir ni omitir ingredientes.
-     - Si "Receta estricta" es **false**, puedes añadir ingredientes básicos para mejorar la receta, sobretodo si los ingredientes disponibles son pocos (1 a 4).
-     - Si "Receta estricta" es **false** y hay muchos ingredientes, puedes omitir algunos ingredientes.
-     
-    
-      RECUERDA RESPONDER SIEMPRE EN FORMATO JSON VÁLIDO.
-      `;
+    // Array de mensajes que incluye el contexto inicial y el prompt del usuario
+    const messages = [
+      { role: "system", content: initialContext }, // Contexto inicial
+      { role: "user", content: userPrompt },       // Parámetros específicos
+    ];
 
     console.log("📌 Enviando prompt a OpenAI...");
 
     // Llamada a la API de OpenAI con manejo de errores
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: prompt }],
+      messages: messages, // Usar el array de mensajes
       temperature: 1.2,
     });
 
