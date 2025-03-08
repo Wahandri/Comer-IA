@@ -2,13 +2,52 @@ import IngredientInput from '../components/IngredientsInput/IngredientsInput';
 import Footer from '../components/Footer/Footer';
 import Head from 'next/head';
 
-
 export default function Home() {
   return (
     <>
       <Head>
-        <title>Comer-IA</title>
+        {/* Título de la página */}
+        <title>Comer-IA | Crea recetas con inteligencia artificial</title>
+
+        {/* Descripción para SEO */}
+        <meta
+          name="description"
+          content="Comer-IA es una herramienta que utiliza inteligencia artificial para crear recetas personalizadas basadas en tus ingredientes y preferencias. ¡Cocina con lo que tienes en casa!"
+        />
+
+        {/* Palabras clave para SEO */}
+        <meta
+          name="keywords"
+          content="recetas, inteligencia artificial, cocina, ingredientes, IA, comida, chef, recetas personalizadas"
+        />
+
+        {/* Open Graph (para compartir en redes sociales) */}
+        <meta property="og:title" content="Comer-IA | Crea recetas con inteligencia artificial" />
+        <meta
+          property="og:description"
+          content="Comer-IA es una herramienta que utiliza inteligencia artificial para crear recetas personalizadas basadas en tus ingredientes y preferencias. ¡Cocina con lo que tienes en casa!"
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://comer-ia.com" />
+        <meta property="og:image" content="https://comer-ia.com/logoComerIA.gif" /> 
+
+        {/* Twitter Card (para compartir en Twitter) */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Comer-IA | Crea recetas con inteligencia artificial" />
+        <meta
+          name="twitter:description"
+          content="Comer-IA es una herramienta que utiliza inteligencia artificial para crear recetas personalizadas basadas en tus ingredientes y preferencias. ¡Cocina con lo que tienes en casa!"
+        />
+        <meta name="twitter:image" content="https://comer-ia.com/logoComerIA.gif" /> 
+
+        {/* Favicon */}
         <link rel="icon" href="/favicon.ico" />
+
+        {/* Apple Touch Icon (para dispositivos Apple) */}
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+        {/* Canonical URL (para evitar contenido duplicado) */}
+        <link rel="canonical" href="https://comer-ia.com" /> 
       </Head>
 
       <main className="container">
@@ -18,14 +57,13 @@ export default function Home() {
           <h1 className='h1Page'>Crea recetas con inteligencia artificial</h1>
         </div>
 
-        <p className="description">Introduce tus ingredientes y parametros.<br/> Una IA creara una receta para ti.</p>
+        <p className="description">Introduce tus ingredientes y parámetros.<br/> Una IA creará una receta para ti.</p>
 
-        
         <div className='box-Ingrdients'>
           <IngredientInput />
         </div>
         <Footer />
       </main>
     </>
-  ); 
+  );
 }
