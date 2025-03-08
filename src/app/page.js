@@ -28,8 +28,12 @@ export default function Home() {
           content="Comer-IA es una herramienta que utiliza inteligencia artificial para crear recetas personalizadas basadas en tus ingredientes y preferencias. ¡Cocina con lo que tienes en casa!"
         />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://comer-ia.com" />
-        <meta property="og:image" content="https://comer-ia.com/logoComerIA.gif" /> 
+        <meta property="og:url" content="https://www.comer-ia.com" />
+        <meta property="og:image" content="https://www.comer-ia.com/logoComerIA.gif" />
+        <meta property="og:image:width" content="300" />
+        <meta property="og:image:height" content="300" />
+        <meta property="og:image:type" content="image/gif" />
+        <meta property="og:image:alt" content="Logo de Comer-IA" />
 
         {/* Twitter Card (para compartir en Twitter) */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -38,7 +42,7 @@ export default function Home() {
           name="twitter:description"
           content="Comer-IA es una herramienta que utiliza inteligencia artificial para crear recetas personalizadas basadas en tus ingredientes y preferencias. ¡Cocina con lo que tienes en casa!"
         />
-        <meta name="twitter:image" content="https://comer-ia.com/logoComerIA.gif" /> 
+        <meta name="twitter:image" content="https://www.comer-ia.com/logoComerIA.gif" />
 
         {/* Favicon */}
         <link rel="icon" href="/favicon.ico" />
@@ -47,7 +51,7 @@ export default function Home() {
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
         {/* Canonical URL (para evitar contenido duplicado) */}
-        <link rel="canonical" href="https://comer-ia.com" /> 
+        <link rel="canonical" href="https://www.comer-ia.com" />
       </Head>
 
       <main className="container">
