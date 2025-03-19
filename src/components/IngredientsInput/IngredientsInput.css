@@ -59,10 +59,14 @@
 
 .header-recipe {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   width: 100%;
+}
 
+.h2Remedi {
+  color: #A2D18C;
 }
 
 .footer-recipe {
@@ -109,6 +113,26 @@
     padding: 10px;
     border-radius: 4px;
     font-size: 1rem;
+  }
+
+  .ingredient-input {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 10px;
+  } .ingredient-input input {
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 1rem;
+  } .ingredient-input select {
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+
+  .bg-remedia {
+    background-color: #A2D18C;
   }
   
   .ingredient-form {
