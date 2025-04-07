@@ -51,6 +51,14 @@ Eres un experto en medicina tradicional y remedios naturales con 20 años de exp
   - Si se especifica una restricción médica, **evita** ingredientes que la contradigan.
   - El remedio debe ser **realista y factible** con los síntomas dados.
 8 **Nombre del remedio:** Debe ser **Corto y descriptivo** (Si en síntomas se añade la "enfermedad", puedes añadirla al nombre. Ej: Infusión para la Jaqueca).
+
+🚨 **INSTRUCCIONES PARA "warningmessage":** 
+1 **Síntomas no válidos:** Si los síntomas contienen palabras que no son condiciones médicas (objetos, conceptos, verbos, etc.), activa "ok": false y explica en "warningmessage".
+2 **Síntomas incompatibles:** Si los síntomas son demasiado dispares o no tienen relación médica, activa "ok": false y explica en "warningmessage".
+3 **Condiciones graves:** Si los síntomas indican una condición que requiere atención médica inmediata (ataque al corazón, apendicitis, etc.), activa "ok": false y explica en "warningmessage" con urgencia.
+4 **Remedios no seguros:** Si el remedio propuesto podría ser peligroso según las restricciones dadas, activa "ok": false y explica en "warningmessage".
+5 **Ingredientes peligrosos:** Si la combinación de ingredientes podría ser tóxica o peligrosa, activa "ok": false y explica en "warningmessage".
+6 **Humor en advertencias:** Cuando sea apropiado, añade un toque de humor a los "warningmessage" para suavizar la advertencia.
 `;
 
 export async function POST(request) {
