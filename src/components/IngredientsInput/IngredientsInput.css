@@ -176,6 +176,12 @@
     font-size: 1rem;
     
   }
+
+  .remed-ia-container button {
+    background-color:rgb(59, 100, 54);
+  } .remed-ia-container button:hover {
+    background-color:rgb(48, 81, 43);
+  }
   
   .ingredient-button:hover {
     background-color:rgb(169, 114, 12);

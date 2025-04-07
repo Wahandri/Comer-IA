@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
-import { toPng } from "html-to-image"; // Opción 1: html-to-image
-import html2canvas from "html2canvas"; // Opción 2: html2canvas
+import html2canvas from "html2canvas";
 import "@/components/IngredientsInput/IngredientsInput.css";
 import "@/components/IngredientsInput/AIResponse.css";
+import "./remed-ia.css";
+import "../../components/IngredientsInput/IngredientsInput.css";
 
 const RemediInput = () => {
   const [symptoms, setSymptoms] = useState([]);
@@ -93,13 +94,6 @@ const RemediInput = () => {
     }
 
     try {
-      // Opción 1: Usar html-to-image
-    //   const dataUrl = await toPng(remedyElement, {
-    //     quality: 1, // Máxima calidad
-    //     pixelRatio: 2, // Mejor resolución para dispositivos retina
-    //   });
-
-      // Opción 2: Usar html2canvas (comenta la opción 1 y descomenta esta)
       const canvas = await html2canvas(remedyElement);
       const dataUrl = canvas.toDataURL("image/png");
 
@@ -115,9 +109,20 @@ const RemediInput = () => {
   };
 
   return (
-    <>
-        <h1>Remed-IA</h1>
-        <div className="ingredient-input bg-remedia">
+    <div className="remed-ia-container">
+        <div className="header-remed-ia">
+            <img
+              src="/logoRemedIA.png"
+              width="200px"
+              alt="Remed-IA Logo"
+            />
+            <h1>Remed-IA</h1>
+            <h3 className="h1Page">Generador de Remedios Naturales</h3>
+            <p>
+              Ingresa tus síntomas y obtén un remedio natural personalizado.
+            </p>
+        </div>
+        <div className="box-Ingrdients-2">
         <button
             className="ingredient-button mg-top-20"
             onClick={() => setShowFilters(!showFilters)}
@@ -127,41 +132,41 @@ const RemediInput = () => {
 
         <div className={`filters-container ${showFilters ? "" : "collapsed"}`}>
             <div>
-            <label className="difficulty-label">Tipo de Remedio:</label>
-            <select
-                value={remedyType}
-                onChange={(e) => setRemedyType(e.target.value)}
-            >
-                <option value="todos">Todos</option>
-                <option value="crema">Crema/Pomada</option>
-                <option value="infusion">Infusión</option>
-                <option value="locion">Loción</option>
-            </select>
+              <label className="difficulty-label">Tipo de Remedio:</label>
+              <select
+                  value={remedyType}
+                  onChange={(e) => setRemedyType(e.target.value)}
+              >
+                  <option value="todos">Todos</option>
+                  <option value="crema">Crema/Pomada</option>
+                  <option value="infusion">Infusión</option>
+                  <option value="locion">Loción</option>
+              </select>
             </div>
 
             <div>
-            <label className="meal-label">Duración:</label>
-            <select
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-            >
-                <option value="corto">Corto plazo</option>
-                <option value="medio">Mediano plazo</option>
-                <option value="largo">Largo plazo</option>
-            </select>
+              <label className="meal-label">Duración:</label>
+              <select
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+              >
+                  <option value="corto">Corto plazo</option>
+                  <option value="medio">Mediano plazo</option>
+                  <option value="largo">Largo plazo</option>
+              </select>
             </div>
 
             <div>
-            <label className="meal-label">Restricciones:</label>
-            <select
-                value={restrictions}
-                onChange={(e) => setRestrictions(e.target.value)}
-            >
-                <option value="ninguna">Ninguna</option>
-                <option value="embarazo">Embarazo</option>
-                <option value="diabetes">Diabetes</option>
-                <option value="presion-alta">Presión Alta</option>
-            </select>
+              <label className="meal-label">Restricciones:</label>
+              <select
+                  value={restrictions}
+                  onChange={(e) => setRestrictions(e.target.value)}
+              >
+                  <option value="ninguna">Ninguna</option>
+                  <option value="embarazo">Embarazo</option>
+                  <option value="diabetes">Diabetes</option>
+                  <option value="presion-alta">Presión Alta</option>
+              </select>
             </div>
         </div>
 
@@ -246,7 +251,7 @@ const RemediInput = () => {
             <div id="remedy-content" className="recipe-result">
             <div className="header-recipe">
                 <img
-                src="/logoRemedia.png"
+                src="/logoRemedIA.png"
                 width="200px"
                 alt="Remed-IA Logo"
                 />
@@ -298,7 +303,7 @@ const RemediInput = () => {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 };
 
