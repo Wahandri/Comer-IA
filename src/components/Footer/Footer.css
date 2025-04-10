@@ -13,14 +13,12 @@
 
 .footer {
   margin-top: auto;
-  
   bottom: 0;
   width: 100%;
   color: aliceblue;
   border-radius: 10px;
   width: 100%;
   background-color: rgba(128, 128, 128, 0.789);
-  margin-top: 100px;
   padding-bottom: 15px;
   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }

@@ -9,7 +9,7 @@ export default function Footer() {
     <footer className='footer flexFooter'>
         <div className='flex2'>
             <div className="contenedor-rotacion">
-                <img className="rotacion" src="./logotipo.png" width="70px" alt=''/>
+                <img className="rotacion" src="/logotipoWahandri.png" width="70px" alt=''/>
                 <div className="texto">
                     <span className="texto-original">Desarrollado por Wahandri</span>
                     <span className="texto-hover">Desarrollado por Manuel García Cobos</span>

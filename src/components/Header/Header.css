@@ -1,0 +1,89 @@
+/* Estilos base */
+.header {
+    padding: 1rem 0;
+    transition: background-color 0.5s ease;
+    box-shadow: 0 25px 15px rgba(0, 0, 0, 0.35);
+    z-index: 1000;
+    position: relative;
+  }
+  
+  /* Temas según página */
+  .header.recipes-theme {
+    background: linear-gradient(
+        170deg,
+        rgba(253, 230, 125, 0.623) 0%,
+        rgb(219, 189, 90) 100%
+    );
+  }
+  
+  .header.remedies-theme {
+    background: linear-gradient(
+        170deg,
+      rgb(193, 222, 186) 0%,
+      rgb(143, 183, 133) 100%
+    );
+  }
+  
+  .box-header {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .urls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    width: 400px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .urls li {
+    margin: 0 10px;
+  }
+  
+  .link {
+    display: inline-block;
+    text-decoration: none;
+    color: #333;
+    font-size: 20px;
+    font-weight: 600;
+    background-color: #f2f2f2;
+    padding: 12px 25px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    transition: all 0.3s ease;
+    position: relative;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  
+  .link:hover {
+    background-color: #e0e0e0;
+    color: #333;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    border-bottom: 4px solid;
+  }
+  
+  /* Estilo para enlace activo */
+  .link.active {
+    border-bottom: 4px solid;
+  }
+  
+  /* Colores de borde según página */
+  .recipes-theme .link.active {
+    border-bottom-color: #ffa000; /* Naranja para recetas */
+  }
+  
+  .remedies-theme .link.active {
+    border-bottom-color: rgb(81, 163, 71) /* Verde para remedios */
+  }
+
+  .recipes-theme .link:hover {
+    border-bottom-color: #ffa000;
+  }
+
+  .remedies-theme .link:hover {
+    border-bottom-color: rgb(81, 163, 71);
+  }

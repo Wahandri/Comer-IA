@@ -1,10 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
 import html2canvas from "html2canvas";
-import "@/components/IngredientsInput/IngredientsInput.css";
-import "@/components/IngredientsInput/AIResponse.css";
+import "@/components/Recipes/Recipes.css";
+import "@/components/Recipes/AIResponse.css";
 import "./remed-ia.css";
-import "../../components/IngredientsInput/IngredientsInput.css";
+import "../../components/Recipes/Recipes.css";
 
 const RemediInput = () => {
   const [symptoms, setSymptoms] = useState([]);
@@ -19,7 +19,7 @@ const RemediInput = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    setShowWarning(true);
+    setShowWarning(false);
     setWarningMessage(
       `⚠️ <strong>Aviso importante:</strong><br/><br/>
       Los remedios sugeridos son recomendaciones generales y no sustituyen atención médica profesional.<br/>
@@ -110,195 +110,193 @@ const RemediInput = () => {
 
   return (
     <div className="remed-ia-container">
-        <div className="header-remed-ia">
-            <img
-              src="/logoRemedIA.png"
-              width="200px"
-              alt="Remed-IA Logo"
-            />
-            <h1>Remed-IA</h1>
-            <h3 className="h1Page">Generador de Remedios Naturales</h3>
-            <p>
-              Ingresa tus síntomas y obtén un remedio natural personalizado.
-            </p>
-        </div>
-        <div className="box-Ingrdients-2">
+      <div className="header-remed-ia">
+        <img className="logo" src="/logoRemedIA.png" width="200px" alt="Remed-IA Logo" />
+        <h1>Remed-IA</h1>
+        <h3 className="h1Page">Generador de Remedios Naturales</h3>
+        <p>Ingresa tus síntomas y obtén un remedio natural personalizado.</p>
+      </div>
+
+      <div className="box-Ingrdients-2">
         <button
-            className="ingredient-button mg-top-20"
-            onClick={() => setShowFilters(!showFilters)}
+          className="ingredient-button mg-top-20"
+          onClick={() => setShowFilters(!showFilters)}
         >
-            {showFilters ? "Ocultar Filtros" : "Mostrar Filtros"}
+          {showFilters ? "Ocultar Filtros" : "Mostrar Filtros"}
         </button>
-
+        
         <div className={`filters-container ${showFilters ? "" : "collapsed"}`}>
-            <div>
-              <label className="difficulty-label">Tipo de Remedio:</label>
-              <select
-                  value={remedyType}
-                  onChange={(e) => setRemedyType(e.target.value)}
-              >
-                  <option value="todos">Todos</option>
-                  <option value="crema">Crema/Pomada</option>
-                  <option value="infusion">Infusión</option>
-                  <option value="locion">Loción</option>
-              </select>
-            </div>
+          <div>
+            <label className="difficulty-label">Tipo de Remedio:</label>
+            <select
+              value={remedyType}
+              onChange={(e) => setRemedyType(e.target.value)}
+            >
+              <option value="todos">Todos</option>
+              <option value="crema">Crema/Pomada</option>
+              <option value="infusion">Infusión</option>
+              <option value="locion">Loción</option>
+            </select>
+          </div>
 
-            <div>
-              <label className="meal-label">Duración:</label>
-              <select
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-              >
-                  <option value="corto">Corto plazo</option>
-                  <option value="medio">Mediano plazo</option>
-                  <option value="largo">Largo plazo</option>
-              </select>
-            </div>
+          <div>
+            <label className="meal-label">Duración:</label>
+            <select
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+            >
+              <option value="corto">Corto plazo</option>
+              <option value="medio">Mediano plazo</option>
+              <option value="largo">Largo plazo</option>
+            </select>
+          </div>
 
-            <div>
-              <label className="meal-label">Restricciones:</label>
-              <select
-                  value={restrictions}
-                  onChange={(e) => setRestrictions(e.target.value)}
-              >
-                  <option value="ninguna">Ninguna</option>
-                  <option value="embarazo">Embarazo</option>
-                  <option value="diabetes">Diabetes</option>
-                  <option value="presion-alta">Presión Alta</option>
-              </select>
-            </div>
+          <div>
+            <label className="meal-label">Restricciones:</label>
+            <select
+              value={restrictions}
+              onChange={(e) => setRestrictions(e.target.value)}
+            >
+              <option value="ninguna">Ninguna</option>
+              <option value="embarazo">Embarazo</option>
+              <option value="diabetes">Diabetes</option>
+              <option value="presion-alta">Presión Alta</option>
+            </select>
+          </div>
         </div>
 
         <div className="ingredients-container">
-            <h3>Síntomas:</h3>
-            <form onSubmit={handleAddSymptom} className="ingredient-form">
+          <h3>Síntomas:</h3>
+          <form onSubmit={handleAddSymptom} className="ingredient-form">
             <input
-                type="text"
-                placeholder="Escribe un síntoma"
-                className="ingredient-field"
+              type="text"
+              placeholder="Escribe un síntoma"
+              className="ingredient-field"
             />
             <button type="submit" className="ingredient-button">
-                Añadir
+              Añadir
             </button>
-            </form>
+          </form>
 
-            {symptoms.length > 0 && (
+          {symptoms.length > 0 && (
             <div className="ingredient-list-container">
-                <ul className="ingredient-list">
+              <ul className="ingredient-list">
                 {symptoms.map((symptom, index) => (
-                    <li
+                  <li
                     key={index}
                     onClick={() => handleRemoveSymptom(index)}
                     className="ingredient-item"
-                    >
+                  >
                     {symptom}
-                    </li>
+                  </li>
                 ))}
-                </ul>
-                <button
+              </ul>
+              <button
                 onClick={() => setSymptoms([])}
                 className="ingredient-button-clear"
-                >
+              >
                 Borrar todo
-                </button>
+              </button>
             </div>
-            )}
+          )}
         </div>
 
         <button
-            onClick={fetchRemedy}
-            className="button-generate-recipe"
-            disabled={symptoms.length === 0}
+          onClick={fetchRemedy}
+          className="button-generate-recipe"
+          disabled={symptoms.length === 0}
         >
-            Generar Remedio
+          Generar Remedio
+          <img src="/mortero.png" width="30px" alt="Mortero"/>
         </button>
 
         {showLoader && (
-            <div className="loader modal-overlay">
-            <img src="/images/logogif.gif" alt="Cargando..." className="logogif" />
+          <div className="loader modal-overlay">
+            <img
+              src="/images/logogif.gif"
+              alt="Cargando..."
+              className="logogif"
+            />
             <div className="loading-text">
-                Analizando síntomas<span className="dot">.</span>
-                <span className="dot">.</span>
-                <span className="dot">.</span>
+              Analizando síntomas<span className="dot">.</span>
+              <span className="dot">.</span>
+              <span className="dot">.</span>
             </div>
-            </div>
+          </div>
         )}
 
         {showWarning && (
-            <div className="modal-overlay">
+          <div className="modal-overlay">
             <div className="warning-modal">
-                <img
+              <img
                 width="130px"
                 src="/images/logoAlert.png"
                 alt="Remed-IA"
                 className="warning-logo"
-                />
-                <div className="warning-content">
+              />
+              <div className="warning-content">
                 <p dangerouslySetInnerHTML={{ __html: warningMessage }} />
                 <button
-                    onClick={() => setShowWarning(false)}
-                    className="ingredient-button"
+                  onClick={() => setShowWarning(false)}
+                  className="ingredient-button"
                 >
-                    Entendido
+                  Entendido
                 </button>
-                </div>
+              </div>
             </div>
-            </div>
+          </div>
         )}
 
         {remedy && (
-            <div id="remedy-content" className="recipe-result">
+          <div id="remedy-content" className="recipe-result">
             <div className="header-recipe">
-                <img
-                src="/logoRemedIA.png"
-                width="200px"
-                alt="Remed-IA Logo"
-                />
-                <h2>Remed-IA</h2>
+              <img src="/logoRemedIA.png" width="200px" alt="Remed-IA Logo" />
+              <h2>Remed-IA</h2>
             </div>
             <h2>{remedy.title}</h2>
             <h3>Síntomas abordados:</h3>
             <div className="pasos">
-                {remedy.symptoms.map((symptom, i) => (
+              {remedy.symptoms.map((symptom, i) => (
                 <li key={i}>{symptom}</li>
-                ))}
+              ))}
             </div>
             <h3>Ingredientes:</h3>
             <div className="pasos">
-                {remedy.ingredients.map((ingredient, i) => (
+              {remedy.ingredients.map((ingredient, i) => (
                 <li key={i}>{ingredient}</li>
-                ))}
+              ))}
             </div>
             <h3>Preparación:</h3>
             <div className="pasos">
-                {remedy.preparation.map((step, i) => (
+              {remedy.preparation.map((step, i) => (
                 <li key={i}>{step}</li>
-                ))}
+              ))}
             </div>
             <h3>Aplicación:</h3>
             <div className="pasos">
-                {remedy.application.map((step, i) => (
+              {remedy.application.map((step, i) => (
                 <li key={i}>{step}</li>
-                ))}
+              ))}
             </div>
             <h3>Descripción:</h3>
             <div className="pasos">
-                <p>{remedy.description}</p>
+              <p>{remedy.description}</p>
             </div>
             {remedy.warnings && (
-                <div className="recipe-tips warning-box">⚠️ {remedy.warnings}</div>
+              <div className="recipe-tips warning-box">
+                ⚠️ {remedy.warnings}
+              </div>
             )}
             <div id="buttonRecipe" className="flexBetween ">
-                <button onClick={handleDownload} className="ingredient-button">
+              <button onClick={handleDownload} className="ingredient-button">
                 📥 Descargar Remedio
-                </button>
+              </button>
             </div>
             <div className="footer-recipe">
-                <h6>
-                Este remedio no sustituye atención médica profesional. Consulta a
-                un especialista.
-                </h6>
+              <h6>
+                Este remedio no sustituye atención médica profesional. Consulta
+                a un especialista.
+              </h6>
             </div>
           </div>
         )}

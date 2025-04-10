@@ -1,18 +1,41 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Configuración del cliente Mistral
+const createMistralClient = () => {
+  const apiKey = process.env.MISTRAL_API_KEY;
+  if (!apiKey) throw new Error("MISTRAL_API_KEY no está configurada en .env.local");
 
-// Función para limpiar el JSON
-function cleanJson(jsonString) {
-  return jsonString.replace(/,\s*([\]}])/g, '$1');
-}
+  return {
+    chat: async ({ model, messages, temperature = 0.7, response_format }) => {
+      const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature,
+          response_format
+        })
+      });
 
-// Contexto inicial que se enviará una sola vez
-const initialContext = `
-Eres un experto en medicina tradicional y remedios naturales con 20 años de experiencia. Tu tarea es generar remedios caseros seguros **en formato JSON** basados en los parámetros que te proporcionaré.
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || "Error en la API de Mistral");
+      }
+
+      return response.json();
+    }
+  };
+};
+
+const client = createMistralClient();
+
+// Contexto optimizado para Mistral
+const systemPrompt = `
+[ESPAÑOL] Eres un experto en medicina tradicional y remedios naturales con 30 años de experiencia. Tu tarea es generar remedios caseros seguros **en formato JSON** basados en los parámetros que te proporcionaré.
 
 📌 **Formato estricto esperado en la respuesta**: SOLO DEVOLVERÁS UN JSON. Sin nada antes ni después.
 {
@@ -53,89 +76,79 @@ Eres un experto en medicina tradicional y remedios naturales con 20 años de exp
 8 **Nombre del remedio:** Debe ser **Corto y descriptivo** (Si en síntomas se añade la "enfermedad", puedes añadirla al nombre. Ej: Infusión para la Jaqueca).
 
 🚨 **INSTRUCCIONES PARA "warningmessage":** 
+0 **Humor:** una pizca de humor es bienvenida, pero no en advertencias graves.
 1 **Síntomas no válidos:** Si los síntomas contienen palabras que no son condiciones médicas (objetos, conceptos, verbos, etc.), activa "ok": false y explica en "warningmessage".
 2 **Síntomas incompatibles:** Si los síntomas son demasiado dispares o no tienen relación médica, activa "ok": false y explica en "warningmessage".
 3 **Condiciones graves:** Si los síntomas indican una condición que requiere atención médica inmediata (ataque al corazón, apendicitis, etc.), activa "ok": false y explica en "warningmessage" con urgencia.
 4 **Remedios no seguros:** Si el remedio propuesto podría ser peligroso según las restricciones dadas, activa "ok": false y explica en "warningmessage".
 5 **Ingredientes peligrosos:** Si la combinación de ingredientes podría ser tóxica o peligrosa, activa "ok": false y explica en "warningmessage".
 6 **Humor en advertencias:** Cuando sea apropiado, añade un toque de humor a los "warningmessage" para suavizar la advertencia.
-`;
+`.trim();
 
 export async function POST(request) {
   try {
+    // Validar y obtener parámetros
     const { symptoms, remedyType, duration, restrictions } = await request.json();
-
-    console.log("📌 Síntomas recibidos:", symptoms);
-    console.log("📌 Filtros -> Tipo de remedio:", remedyType, "| Duración:", duration, "| Restricciones:", restrictions);
-
-    if (!symptoms || symptoms.length === 0) {
-      return NextResponse.json({ error: "Debes proporcionar síntomas." }, { status: 400 });
+    
+    if (!symptoms || !Array.isArray(symptoms)) {
+      return NextResponse.json(
+        { error: "Formato inválido: symptoms debe ser un array" },
+        { status: 400 }
+      );
     }
 
-    // Construir el prompt con los parámetros específicos
+    // Construir el prompt del usuario
     const userPrompt = `
-      📌 **Parámetros de entrada**:
+      Genera un remedio casero con:
       - Síntomas: ${symptoms.join(", ")}
-      - Tipo de remedio: ${remedyType}
-      - Duración: ${duration}
+      - Tipo: ${remedyType || "todos"}
+      - Duración: ${duration || "corto"}
       - Restricciones: ${restrictions || "ninguna"}
-    `;
+      
+      Respuesta EXCLUSIVAMENTE en el formato JSON especificado, sin texto adicional.
+    `.trim();
 
-    // Array de mensajes que incluye el contexto inicial y el prompt del usuario
-    const messages = [
-      { role: "system", content: initialContext }, // Contexto inicial
-      { role: "user", content: userPrompt },       // Parámetros específicos
-    ];
+    console.log("📤 Enviando a Mistral:", { symptoms, remedyType, duration, restrictions });
 
-    console.log("📌 Enviando prompt a OpenAI...");
-
-    // Llamada a la API de OpenAI con manejo de errores
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: messages, // Usar el array de mensajes
-      temperature: 0.8,
+    // Llamada a la API de Mistral
+    const response = await client.chat({
+      model: 'mistral-medium',
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      temperature: 0.7,
+      response_format: { type: "json_object" }
     });
 
-    // Validar la respuesta antes de intentar analizarla
-    if (!response.choices || response.choices.length === 0 || !response.choices[0].message?.content) {
-      console.error("❌ Respuesta inesperada de OpenAI:", response);
-      return NextResponse.json({ error: "Respuesta inválida de OpenAI." }, { status: 500 });
+    // Procesamiento de la respuesta
+    const content = response.choices?.[0]?.message?.content;
+    if (!content) throw new Error("La respuesta no contiene contenido");
+
+    // Extraer JSON (compatible con bloques de código o JSON puro)
+    let jsonContent = content;
+    const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
+    if (jsonMatch) jsonContent = jsonMatch[1].trim();
+
+    // Validar y parsear
+    const remedy = JSON.parse(jsonContent);
+    
+    if (typeof remedy.ok === 'undefined') {
+      remedy.ok = true; // Forzar estructura esperada
     }
 
-    // Limpiar la respuesta para extraer solo el JSON
-    const rawContent = response.choices[0].message.content;
-
-    // Intentar extraer el JSON de un bloque ```json ``` (si existe)
-    let jsonContent = rawContent.match(/```json\s*([\s\S]*?)\s*```/);
-
-    // Si no se encuentra un bloque ```json ```, asumir que la respuesta es directamente un JSON
-    if (!jsonContent || !jsonContent[1]) {
-      jsonContent = rawContent; // Usar la respuesta completa como JSON
-    } else {
-      jsonContent = jsonContent[1].trim(); // Extraer el JSON del bloque ```json ```
-    }
-
-    // Validar que el contenido es un JSON válido
-    if (!jsonContent) {
-      console.error("❌ No se encontró JSON válido en la respuesta:", rawContent);
-      return NextResponse.json({ error: "Formato de respuesta inválido." }, { status: 500 });
-    }
-
-    // Limpiar el JSON antes de analizarlo
-    const cleanedJsonContent = cleanJson(jsonContent);
-
-    let remedy;
-    try {
-      remedy = JSON.parse(cleanedJsonContent); // Analizar el JSON limpio
-    } catch (error) {
-      console.error("❌ Error al analizar JSON de OpenAI:", error, cleanedJsonContent);
-      return NextResponse.json({ error: "Error al procesar la respuesta de OpenAI." }, { status: 500 });
-    }
-
-    console.log("📌 Remedio generado correctamente:", remedy);
+    console.log("📦 Respuesta procesada:", remedy);
     return NextResponse.json(remedy);
+
   } catch (error) {
-    console.error("❌ Error en la API:", error);
-    return NextResponse.json({ error: "Error al generar el remedio." }, { status: 500 });
+    console.error("❌ Error:", error);
+    return NextResponse.json(
+      { 
+        ok: false,
+        warningmessage: `Error al generar el remedio: ${error.message}`,
+        error: error.message 
+      },
+      { status: 500 }
+    );
   }
 }
