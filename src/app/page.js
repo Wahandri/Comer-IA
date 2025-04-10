@@ -1,5 +1,19 @@
 import Recipes from '../components/Recipes/Recipes';
+import { useEffect } from "react";
 import Head from 'next/head';
+
+const [showWarning, setShowWarning] = useState(false);
+
+useEffect(() => {
+  setShowWarning(false);
+  setWarningMessage(
+    `⚠️ <strong>Aviso importante:</strong><br/><br/>
+    La recetas y remedios sugeridos son recomendaciones generales y no sustituyen atención médica profesional.<br/>
+    Consulta siempre con un especialista antes de usar cualquier remedio.<br/><br/>
+    ¡Cuida tu salud con Remed-IA! 🌿🤖`
+  );
+}, []);
+
 
 export default function Home() {
   return (
