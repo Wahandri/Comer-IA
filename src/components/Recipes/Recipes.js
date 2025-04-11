@@ -136,7 +136,7 @@ const IngredientInput = () => {
     <div className="box-Recipes">
       <img src='/logoComerIA.gif' width='300px' alt="Recipes Logo" className="logo" />
       <div>
-        <h1>Recipes</h1>
+        <h1>Comer-IA</h1>
         <h1 className='h1Page'>Crea recetas con inteligencia artificial</h1>
       </div>
 
