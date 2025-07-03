@@ -1,39 +1,13 @@
 import { NextResponse } from "next/server";
+import OpenAI from "openai";
 
-// Configuración del cliente Mistral
-const createMistralClient = () => {
-  const apiKey = process.env.MISTRAL_API_KEY;
-  if (!apiKey) throw new Error("MISTRAL_API_KEY no está configurada en .env.local");
+// Cliente DeepSeek configurado
+const openai = new OpenAI({
+  apiKey: process.env.DEEPSEEK_API_KEY,
+  baseURL: "https://api.deepseek.com",
+});
 
-  return {
-    chat: async ({ model, messages, temperature = 0.7, response_format }) => {
-      const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model,
-          messages,
-          temperature,
-          response_format
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || "Error en la API de Mistral");
-      }
-
-      return response.json();
-    }
-  };
-};
-
-const client = createMistralClient();
-
-// Contexto optimizado para Mistral
+// Contexto del sistema para DeepSeek
 const systemPrompt = `
 [ESPAÑOL] Eres un experto en medicina tradicional y remedios naturales con 30 años de experiencia. Tu tarea es generar remedios caseros seguros **en formato JSON** basados en los parámetros que te proporcionaré.
 
@@ -87,9 +61,9 @@ const systemPrompt = `
 
 export async function POST(request) {
   try {
-    // Validar y obtener parámetros
-    const { symptoms, remedyType, duration, restrictions } = await request.json();
-    
+    const { symptoms, remedyType, duration, restrictions } =
+      await request.json();
+
     if (!symptoms || !Array.isArray(symptoms)) {
       return NextResponse.json(
         { error: "Formato inválido: symptoms debe ser un array" },
@@ -108,45 +82,47 @@ export async function POST(request) {
       Respuesta EXCLUSIVAMENTE en el formato JSON especificado, sin texto adicional.
     `.trim();
 
-    console.log("📤 Enviando a Mistral:", { symptoms, remedyType, duration, restrictions });
-
-    // Llamada a la API de Mistral
-    const response = await client.chat({
-      model: 'mistral-medium',
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
-      ],
-      temperature: 0.7,
-      response_format: { type: "json_object" }
+    console.log("📤 Enviando a DeepSeek:", {
+      symptoms,
+      remedyType,
+      duration,
+      restrictions,
     });
 
-    // Procesamiento de la respuesta
+    // Llamada a DeepSeek
+    const response = await openai.chat.completions.create({
+      model: "deepseek-chat",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      temperature: 0.7,
+      max_tokens: 800,
+    });
+
     const content = response.choices?.[0]?.message?.content;
     if (!content) throw new Error("La respuesta no contiene contenido");
 
-    // Extraer JSON (compatible con bloques de código o JSON puro)
+    // Extraer JSON si viene dentro de ```json ```
     let jsonContent = content;
     const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
     if (jsonMatch) jsonContent = jsonMatch[1].trim();
 
-    // Validar y parsear
     const remedy = JSON.parse(jsonContent);
-    
-    if (typeof remedy.ok === 'undefined') {
-      remedy.ok = true; // Forzar estructura esperada
+
+    if (typeof remedy.ok === "undefined") {
+      remedy.ok = true;
     }
 
     console.log("📦 Respuesta procesada:", remedy);
     return NextResponse.json(remedy);
-
   } catch (error) {
     console.error("❌ Error:", error);
     return NextResponse.json(
-      { 
+      {
         ok: false,
         warningmessage: `Error al generar el remedio: ${error.message}`,
-        error: error.message 
+        error: error.message,
       },
       { status: 500 }
     );

@@ -2,15 +2,16 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.DEEPSEEK_API_KEY || "", // ← ahora usa DEEPSEEK_API_KEY
+  baseURL: "https://api.deepseek.com", // ← apunta a DeepSeek
 });
 
 // Función para limpiar el JSON
 function cleanJson(jsonString) {
-  return jsonString.replace(/,\s*([\]}])/g, '$1');
+  return jsonString.replace(/,\s*([\]}])/g, "$1");
 }
 
-// Contexto inicial que se enviará una sola vez
+// Contexto inicial
 const initialContext = `
 Eres un chef profesional y experto en nutrición. Tu tarea es generar recetas detalladas **en formato JSON** basadas en los parámetros que te proporcionaré.
 
@@ -46,25 +47,48 @@ Eres un chef profesional y experto en nutrición. Tu tarea es generar recetas de
 1 **Recetas no seguras:** Si la receta es **poco saludable o peligrosa**, activa "ok": false y explica en "warningmessage".
 2 **Ingredientes no compatibles con la dieta especificada:** Si la receta contiene ingredientes que contradicen la dieta, activa "ok": false y explica en "warningmessage".
 3 **Ingredientes inválidos:** Si la lista contiene palabras que no son alimentos (sentimientos, conceptos, etc), activa "ok": false.  
-4 **Advertencias:** Si la receta **no es comestible o es peligrosa** (ej: objetos, cosas, ingredientes peligrosos de ingerir), "ok": false y incluye un "warningmessage" explicando el motivo (**el mensaje tendrá un poco de humor**).  
+4 **Advertencias:** Si la receta **no es comestible o es peligrosa** (ej: objetos, cosas, ingredientes peligrosos de ingerir), "ok": false y explica en "warningmessage" con humor si aplica.  
 5 **Si la receta contiene nombres propios, conceptos, verbos o palabras que no son alimentos, activa "ok": false y explica en "warningmessage": "mensaje".**
 `;
 
 export async function POST(request) {
   try {
-    const { ingredients, difficulty, mealType, diet, portions, appliances, regeneratePart, useStrictIngredients } = await request.json();
+    const {
+      ingredients,
+      difficulty,
+      mealType,
+      diet,
+      portions,
+      appliances,
+      regeneratePart,
+      useStrictIngredients,
+    } = await request.json();
 
     console.log("📌 Ingredientes recibidos:", ingredients);
-    console.log("📌 Filtros -> Dificultad:", difficulty, "| Tipo de comida:", mealType, "| Dieta:", diet, "| Porciones:", portions);
+    console.log(
+      "📌 Filtros -> Dificultad:",
+      difficulty,
+      "| Tipo de comida:",
+      mealType,
+      "| Dieta:",
+      diet,
+      "| Porciones:",
+      portions
+    );
     console.log("📌 Electrodomésticos:", appliances);
     console.log("📌 Regenerar parte:", regeneratePart);
-    console.log("📌 Usar solo ingredientes seleccionados:", useStrictIngredients);
+    console.log(
+      "📌 Usar solo ingredientes seleccionados:",
+      useStrictIngredients
+    );
 
     if (!ingredients || ingredients.length === 0) {
-      return NextResponse.json({ error: "Debes proporcionar ingredientes." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Debes proporcionar ingredientes." },
+        { status: 400 }
+      );
     }
 
-    // Construir el prompt con los parámetros específicos
     const userPrompt = `
       📌 **Parámetros de entrada**:
       - Ingredientes disponibles: ${ingredients.join(", ")}
@@ -76,61 +100,76 @@ export async function POST(request) {
       - Receta estricta: ${useStrictIngredients ? "true" : "false"}
     `;
 
-    // Array de mensajes que incluye el contexto inicial y el prompt del usuario
     const messages = [
-      { role: "system", content: initialContext }, // Contexto inicial
-      { role: "user", content: userPrompt },       // Parámetros específicos
+      { role: "system", content: initialContext },
+      { role: "user", content: userPrompt },
     ];
 
-    console.log("📌 Enviando prompt a OpenAI...");
+    console.log("📌 Enviando prompt a DeepSeek...");
 
-    // Llamada a la API de OpenAI con manejo de errores
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: messages, // Usar el array de mensajes
+      model: "deepseek-chat", // ← modelo DeepSeek
+      messages,
       temperature: 1.2,
+      max_tokens: 800,
     });
 
-    // Validar la respuesta antes de intentar analizarla
-    if (!response.choices || response.choices.length === 0 || !response.choices[0].message?.content) {
-      console.error("❌ Respuesta inesperada de OpenAI:", response);
-      return NextResponse.json({ error: "Respuesta inválida de OpenAI." }, { status: 500 });
+    if (
+      !response.choices ||
+      response.choices.length === 0 ||
+      !response.choices[0].message?.content
+    ) {
+      console.error("❌ Respuesta inesperada de DeepSeek:", response);
+      return NextResponse.json(
+        { error: "Respuesta inválida de DeepSeek." },
+        { status: 500 }
+      );
     }
 
-    // Limpiar la respuesta para extraer solo el JSON
     const rawContent = response.choices[0].message.content;
 
-    // Intentar extraer el JSON de un bloque ```json ``` (si existe)
     let jsonContent = rawContent.match(/```json\s*([\s\S]*?)\s*```/);
-
-    // Si no se encuentra un bloque ```json ```, asumir que la respuesta es directamente un JSON
     if (!jsonContent || !jsonContent[1]) {
-      jsonContent = rawContent; // Usar la respuesta completa como JSON
+      jsonContent = rawContent;
     } else {
-      jsonContent = jsonContent[1].trim(); // Extraer el JSON del bloque ```json ```
+      jsonContent = jsonContent[1].trim();
     }
 
-    // Validar que el contenido es un JSON válido
     if (!jsonContent) {
-      console.error("❌ No se encontró JSON válido en la respuesta:", rawContent);
-      return NextResponse.json({ error: "Formato de respuesta inválido." }, { status: 500 });
+      console.error(
+        "❌ No se encontró JSON válido en la respuesta:",
+        rawContent
+      );
+      return NextResponse.json(
+        { error: "Formato de respuesta inválido." },
+        { status: 500 }
+      );
     }
 
-    // Limpiar el JSON antes de analizarlo
     const cleanedJsonContent = cleanJson(jsonContent);
 
     let recipe;
     try {
-      recipe = JSON.parse(cleanedJsonContent); // Analizar el JSON limpio
+      recipe = JSON.parse(cleanedJsonContent);
     } catch (error) {
-      console.error("❌ Error al analizar JSON de OpenAI:", error, cleanedJsonContent);
-      return NextResponse.json({ error: "Error al procesar la respuesta de OpenAI." }, { status: 500 });
+      console.error(
+        "❌ Error al analizar JSON de DeepSeek:",
+        error,
+        cleanedJsonContent
+      );
+      return NextResponse.json(
+        { error: "Error al procesar la respuesta de DeepSeek." },
+        { status: 500 }
+      );
     }
 
     console.log("📌 Receta generada correctamente:", recipe);
     return NextResponse.json(recipe);
   } catch (error) {
     console.error("❌ Error en la API:", error);
-    return NextResponse.json({ error: "Error al generar la receta." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Error al generar la receta." },
+      { status: 500 }
+    );
   }
 }
