@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
-// Cliente DeepSeek configurado
+// Cliente OpenAI configurado
 const openai = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY,
-  baseURL: "https://api.deepseek.com",
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Contexto del sistema para DeepSeek
+// Contexto del sistema para OpenAI
 const systemPrompt = `
 [ESPAÑOL] Eres un experto en medicina tradicional y remedios naturales con 30 años de experiencia. Tu tarea es generar remedios caseros seguros **en formato JSON** basados en los parámetros que te proporcionaré.
 
@@ -82,16 +81,16 @@ export async function POST(request) {
       Respuesta EXCLUSIVAMENTE en el formato JSON especificado, sin texto adicional.
     `.trim();
 
-    console.log("📤 Enviando a DeepSeek:", {
+    console.log("📤 Enviando a OpenAI:", {
       symptoms,
       remedyType,
       duration,
       restrictions,
     });
 
-    // Llamada a DeepSeek
+    // Llamada a OpenAI
     const response = await openai.chat.completions.create({
-      model: "deepseek-chat",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },

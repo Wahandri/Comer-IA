@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || "", // ← ahora usa DEEPSEEK_API_KEY
-  baseURL: "https://api.deepseek.com", // ← apunta a DeepSeek
+  apiKey: process.env.OPENAI_API_KEY || "", // Usa OPENAI_API_KEY
 });
 
 // Función para limpiar el JSON
@@ -105,10 +104,10 @@ export async function POST(request) {
       { role: "user", content: userPrompt },
     ];
 
-    console.log("📌 Enviando prompt a DeepSeek...");
+    console.log("📌 Enviando prompt a OpenAI...");
 
     const response = await openai.chat.completions.create({
-      model: "deepseek-chat", // ← modelo DeepSeek
+      model: "gpt-4o-mini",
       messages,
       temperature: 1.2,
       max_tokens: 800,
@@ -119,9 +118,9 @@ export async function POST(request) {
       response.choices.length === 0 ||
       !response.choices[0].message?.content
     ) {
-      console.error("❌ Respuesta inesperada de DeepSeek:", response);
+      console.error("❌ Respuesta inesperada de OpenAI:", response);
       return NextResponse.json(
-        { error: "Respuesta inválida de DeepSeek." },
+        { error: "Respuesta inválida de OpenAI." },
         { status: 500 }
       );
     }
@@ -153,12 +152,12 @@ export async function POST(request) {
       recipe = JSON.parse(cleanedJsonContent);
     } catch (error) {
       console.error(
-        "❌ Error al analizar JSON de DeepSeek:",
+        "❌ Error al analizar JSON de OpenAI:",
         error,
         cleanedJsonContent
       );
       return NextResponse.json(
-        { error: "Error al procesar la respuesta de DeepSeek." },
+        { error: "Error al procesar la respuesta de OpenAI." },
         { status: 500 }
       );
     }
