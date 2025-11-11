@@ -111,7 +111,7 @@ const RemediInput = () => {
   return (
     <div className="remed-ia-container">
       <div className="header-remed-ia">
-        <img className="logo" src="/logoRemedIA.png" width="200px" alt="Remed-IA Logo" />
+        <img className="logo" src="/logoRemedIA.gif" width="200px" alt="Remed-IA Logo" />
         <h1>Remed-IA</h1>
         <h3 className="h1Page">Generador de Remedios Naturales</h3>
         <p>Ingresa tus síntomas y obtén un remedio natural personalizado.</p>
@@ -250,7 +250,7 @@ const RemediInput = () => {
         {remedy && (
           <div id="remedy-content" className="recipe-result">
             <div className="header-recipe">
-              <img src="/logoRemedIA.png" width="200px" alt="Remed-IA Logo" />
+              <img src="/logoRemedIA.gif" width="200px" alt="Remed-IA Logo" />
               <h2>Remed-IA</h2>
             </div>
             <h2>{remedy.title}</h2>
