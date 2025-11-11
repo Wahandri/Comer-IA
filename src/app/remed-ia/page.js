@@ -213,7 +213,7 @@ const RemediInput = () => {
         {showLoader && (
           <div className="loader modal-overlay">
             <img
-              src="/images/logogif.gif"
+              src="/logoRemedIA.gif"
               alt="Cargando..."
               className="logogif"
             />
@@ -230,7 +230,7 @@ const RemediInput = () => {
             <div className="warning-modal">
               <img
                 width="130px"
-                src="/images/logoAlert.png"
+                src="/logoAlertR.png"
                 alt="Remed-IA"
                 className="warning-logo"
               />
